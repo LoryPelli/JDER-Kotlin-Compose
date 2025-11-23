@@ -1,6 +1,7 @@
 package com.jder.domain.model
-import androidx.compose.runtime.*
-import java.io.File
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import java.util.UUID
 class DiagramState {
     var diagram by mutableStateOf(ERDiagram(name = "Nuovo Diagramma"))
@@ -255,7 +256,7 @@ class DiagramState {
     }
 }
 enum class ToolMode {
-    SELECT,      // Modalità selezione
-    ENTITY,      // Crea entità
-    RELATIONSHIP // Crea relazione
+    SELECT,
+    ENTITY,
+    RELATIONSHIP
 }

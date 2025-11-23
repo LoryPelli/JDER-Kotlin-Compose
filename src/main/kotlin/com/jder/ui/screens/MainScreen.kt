@@ -1,31 +1,79 @@
 package com.jder.ui.screens
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Link
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Divider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.toComposeImageBitmap
-import androidx.compose.ui.input.key.*
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.isCtrlPressed
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.unit.dp
 import com.jder.data.DiagramRepository
 import com.jder.data.ImageExporter
-import com.jder.domain.model.*
+import com.jder.domain.model.Attribute
+import com.jder.domain.model.AttributeType
+import com.jder.domain.model.Connection
+import com.jder.domain.model.DiagramState
+import com.jder.domain.model.ERDiagram
+import com.jder.domain.model.ToolMode
 import com.jder.ui.components.ContextMenu
 import com.jder.ui.components.DiagramToolbar
 import com.jder.ui.components.ERDiagramCanvas
-import com.jder.ui.dialogs.*
+import com.jder.ui.components.FileManagerDialog
+import com.jder.ui.components.FileManagerMode
+import com.jder.ui.dialogs.AddAttributeDialog
+import com.jder.ui.dialogs.CreateConnectionDialog
+import com.jder.ui.dialogs.EditAttributeDialog
+import com.jder.ui.dialogs.EditConnectionDialog
+import com.jder.ui.dialogs.EntityPropertiesDialog
+import com.jder.ui.dialogs.RelationshipPropertiesDialog
 import java.awt.BasicStroke
 import java.awt.Color
 import java.awt.Font
 import java.awt.RenderingHints
 import java.awt.image.BufferedImage
 import java.io.File
-import javax.swing.JFileChooser
-import javax.swing.UIManager
-import javax.swing.filechooser.FileNameExtensionFilter
 @Composable
 fun MainScreen(
     state: DiagramState = remember { DiagramState() },
@@ -427,42 +475,40 @@ fun MainScreen(
         )
     }
     if (showOpenDialog) {
-        LaunchedEffect(Unit) {
-            val file = showNativeFileChooser(
-                title = "Apri Diagramma",
-                mode = FileChooserMode.OPEN,
-                fileExtension = "json",
-                fileDescription = "File JSON (*.json)"
-            )
-            showOpenDialog = false
-            file?.let {
-                repository.loadDiagram(it).fold(
+        FileManagerDialog(
+            mode = FileManagerMode.OPEN,
+            fileExtension = ".json",
+            title = "Apri Diagramma",
+            onDismiss = { showOpenDialog = false },
+            onFileSelected = { file ->
+                showOpenDialog = false
+                repository.loadDiagram(file).fold(
                     onSuccess = { diagram ->
-                        state.loadDiagram(diagram, it.absolutePath)
-                        snackbarMessage = "Diagramma caricato: ${it.name}"
+                        state.loadDiagram(diagram, file.absolutePath)
+                        snackbarMessage = "Diagramma caricato: ${file.name}"
                     },
                     onFailure = { error ->
                         snackbarMessage = "Errore nel caricamento: ${error.message}"
                     }
                 )
             }
-        }
+        )
     }
     if (showSaveAsDialog || showSaveDialog) {
-        LaunchedEffect(Unit) {
-            val file = showNativeFileChooser(
-                title = "Salva Diagramma",
-                mode = FileChooserMode.SAVE,
-                fileExtension = "json",
-                fileDescription = "File JSON (*.json)",
-                defaultFileName = "diagramma.json"
-            )
-            showSaveAsDialog = false
-            showSaveDialog = false
-            file?.let {
-                val finalFile = if (it.extension != "json") {
-                    File(it.parentFile, "${it.nameWithoutExtension}.json")
-                } else it
+        FileManagerDialog(
+            mode = FileManagerMode.SAVE,
+            fileExtension = ".json",
+            title = "Salva Diagramma",
+            onDismiss = {
+                showSaveAsDialog = false
+                showSaveDialog = false
+            },
+            onFileSelected = { file ->
+                showSaveAsDialog = false
+                showSaveDialog = false
+                val finalFile = if (file.extension != "json") {
+                    File(file.parentFile, "${file.nameWithoutExtension}.json")
+                } else file
                 repository.saveDiagram(state.diagram, finalFile).fold(
                     onSuccess = {
                         state.markAsSaved(finalFile.absolutePath)
@@ -473,22 +519,19 @@ fun MainScreen(
                     }
                 )
             }
-        }
+        )
     }
     if (showExportDialog) {
-        LaunchedEffect(Unit) {
-            val file = showNativeFileChooser(
-                title = "Esporta come PNG",
-                mode = FileChooserMode.SAVE,
-                fileExtension = "png",
-                fileDescription = "Immagine PNG (*.png)",
-                defaultFileName = "diagramma.png"
-            )
-            showExportDialog = false
-            file?.let { outputFile ->
-                val pngFile = if (outputFile.extension != "png") {
-                    File(outputFile.parentFile, "${outputFile.nameWithoutExtension}.png")
-                } else outputFile
+        FileManagerDialog(
+            mode = FileManagerMode.SAVE,
+            fileExtension = ".png",
+            title = "Esporta come PNG",
+            onDismiss = { showExportDialog = false },
+            onFileSelected = { file ->
+                showExportDialog = false
+                val pngFile = if (file.extension != "png") {
+                    File(file.parentFile, "${file.nameWithoutExtension}.png")
+                } else file
                 try {
                     val imageExporter = ImageExporter()
                     val bitmap = renderDiagramToBitmap(state.diagram)
@@ -504,11 +547,8 @@ fun MainScreen(
                     snackbarMessage = "Errore nell'esportazione: ${e.message}"
                 }
             }
-        }
+        )
     }
-}
-enum class FileChooserMode {
-    OPEN, SAVE
 }
 fun renderDiagramToBitmap(diagram: ERDiagram): ImageBitmap {
     val padding = 150f
@@ -622,39 +662,6 @@ fun renderDiagramToBitmap(diagram: ERDiagram): ImageBitmap {
     }
     g2d.dispose()
     return bufferedImage.toComposeImageBitmap()
-}
-fun showNativeFileChooser(
-    title: String,
-    mode: FileChooserMode,
-    fileExtension: String,
-    fileDescription: String,
-    defaultFileName: String? = null
-): File? {
-    return try {
-        UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName())
-        val fileChooser = JFileChooser().apply {
-            dialogTitle = title
-            fileSelectionMode = JFileChooser.FILES_ONLY
-            addChoosableFileFilter(FileNameExtensionFilter(fileDescription, fileExtension))
-            isAcceptAllFileFilterUsed = false
-            if (mode == FileChooserMode.SAVE && defaultFileName != null) {
-                selectedFile = File(defaultFileName)
-            }
-            isMultiSelectionEnabled = false
-        }
-        val result = when (mode) {
-            FileChooserMode.OPEN -> fileChooser.showOpenDialog(null)
-            FileChooserMode.SAVE -> fileChooser.showSaveDialog(null)
-        }
-        if (result == JFileChooser.APPROVE_OPTION) {
-            fileChooser.selectedFile
-        } else {
-            null
-        }
-    } catch (e: Exception) {
-        e.printStackTrace()
-        null
-    }
 }
 @Composable
 fun PropertiesPanel(

@@ -1,5 +1,5 @@
 package com.jder.data
-import com.jder.domain.model.*
+import com.jder.domain.model.ERDiagram
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.File

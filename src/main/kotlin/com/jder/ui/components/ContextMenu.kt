@@ -1,15 +1,32 @@
 package com.jder.ui.components
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Link
+import androidx.compose.material3.Divider
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 @Composable
 fun ContextMenu(
     position: Offset,
@@ -20,8 +37,9 @@ fun ContextMenu(
     onAddAttribute: () -> Unit,
     onAddConnection: (() -> Unit)? = null
 ) {
+    val coroutineScope = rememberCoroutineScope()
     Popup(
-        alignment = androidx.compose.ui.Alignment.TopStart,
+        alignment = Alignment.TopStart,
         offset = IntOffset(position.x.toInt(), position.y.toInt()),
         onDismissRequest = onDismiss,
         properties = PopupProperties(focusable = true)
@@ -45,43 +63,61 @@ fun ContextMenu(
                 Divider()
                 DropdownMenuItem(
                     text = {
-                        Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.Default.Edit, null, modifier = Modifier.size(20.dp))
                             Spacer(Modifier.width(12.dp))
                             Text("Modifica Proprietà")
                         }
                     },
-                    onClick = onEdit,
+                    onClick = {
+                        coroutineScope.launch {
+                            delay(150)
+                            onDismiss()
+                            onEdit()
+                        }
+                    },
                     leadingIcon = null
                 )
                 DropdownMenuItem(
                     text = {
-                        Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.Default.Add, null, modifier = Modifier.size(20.dp))
                             Spacer(Modifier.width(12.dp))
                             Text("Aggiungi Attributo")
                         }
                     },
-                    onClick = onAddAttribute,
+                    onClick = {
+                        coroutineScope.launch {
+                            delay(150)
+                            onDismiss()
+                            onAddAttribute()
+                        }
+                    },
                     leadingIcon = null
                 )
                 if (onAddConnection != null) {
                     DropdownMenuItem(
                         text = {
-                            Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
                                 Icon(Icons.Default.Link, null, modifier = Modifier.size(20.dp))
                                 Spacer(Modifier.width(12.dp))
                                 Text("Aggiungi Connessione")
                             }
                         },
-                        onClick = onAddConnection,
+                        onClick = {
+                            coroutineScope.launch {
+                                delay(150)
+                                onDismiss()
+                                onAddConnection()
+                            }
+                        },
                         leadingIcon = null
                     )
                 }
                 Divider()
                 DropdownMenuItem(
                     text = {
-                        Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
                                 Icons.Default.Delete,
                                 null,
@@ -95,7 +131,13 @@ fun ContextMenu(
                             )
                         }
                     },
-                    onClick = onDelete,
+                    onClick = {
+                        coroutineScope.launch {
+                            delay(150)
+                            onDismiss()
+                            onDelete()
+                        }
+                    },
                     leadingIcon = null
                 )
             }

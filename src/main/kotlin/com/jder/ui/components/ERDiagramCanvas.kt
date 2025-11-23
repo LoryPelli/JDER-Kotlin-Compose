@@ -3,16 +3,35 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.*
-import androidx.compose.ui.graphics.drawscope.*
-import androidx.compose.ui.input.pointer.*
-import androidx.compose.ui.text.*
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.Fill
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.withTransform
+import androidx.compose.ui.input.pointer.PointerEventType
+import androidx.compose.ui.input.pointer.isSecondaryPressed
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.text.TextMeasurer
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.drawText
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.sp
-import com.jder.domain.model.*
+import com.jder.domain.model.Attribute
+import com.jder.domain.model.AttributeType
+import com.jder.domain.model.DiagramState
+import com.jder.domain.model.Entity
+import com.jder.domain.model.Relationship
+import com.jder.domain.model.ToolMode
 @Composable
 fun ERDiagramCanvas(
     state: DiagramState,
@@ -128,7 +147,6 @@ fun ERDiagramCanvas(
                         handleDrag(state, dragAmount)
                     },
                     onDragEnd = {
-                        handleDragEnd()
                         isDragging = false
                     }
                 )
@@ -177,9 +195,9 @@ fun ERDiagramCanvas(
                     textMeasurer = textMeasurer
                 )
             }
-        } // Fine withTransform
-    } // Fine Canvas
-} // Fine ERDiagramCanvas
+        }
+    }
+}
 private fun DrawScope.drawGrid(canvasSize: Size, color: Color, spacing: Float = 20f) {
     val numVerticalLines = (canvasSize.width / spacing).toInt()
     val numHorizontalLines = (canvasSize.height / spacing).toInt()
@@ -260,8 +278,8 @@ private fun DrawScope.drawEntity(
         entity.attributes.forEachIndexed { index, attribute ->
             drawAttribute(
                 attribute = attribute,
-                parentX = entity.x + entity.width, // A destra dell'entità
-                parentY = entity.y + entity.height / 2, // Al centro verticalmente
+                parentX = entity.x + entity.width,
+                parentY = entity.y + entity.height / 2,
                 index = index,
                 total = entity.attributes.size,
                 textMeasurer = textMeasurer,
@@ -329,8 +347,8 @@ private fun DrawScope.drawRelationship(
         relationship.attributes.forEachIndexed { index, attribute ->
             drawAttribute(
                 attribute = attribute,
-                parentX = relationship.x + relationship.width, // A destra
-                parentY = centerY, // Al centro verticalmente
+                parentX = relationship.x + relationship.width,
+                parentY = centerY,
                 index = index,
                 total = relationship.attributes.size,
                 textMeasurer = textMeasurer,
@@ -369,7 +387,7 @@ private fun DrawScope.drawAttribute(
                 style = Fill
             )
             drawCircle(
-                color = Color(0xFFFFA726), // Arancione per composti
+                color = Color(0xFFFFA726),
                 radius = radius,
                 center = Offset(attrX, attrY),
                 style = Stroke(width = 2.5f)
@@ -461,8 +479,8 @@ private fun DrawScope.drawAttribute(
                 androidx.compose.ui.text.font.FontWeight.SemiBold
         )
     )
-    val textX = attrX + radius + 10 // A destra del cerchio
-    val textY = attrY - textLayoutResult.size.height / 2 // Centrato verticalmente
+    val textX = attrX + radius + 10
+    val textY = attrY - textLayoutResult.size.height / 2
     drawRoundRect(
         color = Color(0xDD000000),
         topLeft = Offset(textX - 5, textY - 2),
@@ -495,11 +513,10 @@ private fun DrawScope.drawAttribute(
                 fontWeight = androidx.compose.ui.text.font.FontWeight.Normal
             )
         )
-        val multX = textX
         val multY = textY + textLayoutResult.size.height + 4
         drawRoundRect(
             color = Color(0xDD000000),
-            topLeft = Offset(multX - 3, multY - 1),
+            topLeft = Offset(textX - 3, multY - 1),
             size = Size(
                 multiplicityText.size.width.toFloat() + 6,
                 multiplicityText.size.height.toFloat() + 2
@@ -508,7 +525,7 @@ private fun DrawScope.drawAttribute(
         )
         drawText(
             textLayoutResult = multiplicityText,
-            topLeft = Offset(multX, multY)
+            topLeft = Offset(textX, multY)
         )
     }
 }
@@ -520,9 +537,9 @@ private fun DrawScope.drawAttributeComponent(
     total: Int,
     textMeasurer: TextMeasurer
 ) {
-    val radius = 12f // Più piccolo per i componenti
-    val horizontalSpacing = 50f // Spostamento a destra
-    val verticalSpacing = 35f // Spazio tra componenti
+    val radius = 12f
+    val horizontalSpacing = 50f
+    val verticalSpacing = 35f
     val startY = parentY - ((total - 1) * verticalSpacing / 2f)
     val compX = parentX + horizontalSpacing
     val compY = startY + (index * verticalSpacing)
@@ -597,16 +614,16 @@ private fun DrawScope.drawConnectionsForRelationship(
                 end = Offset(entityCenterX, entityCenterY),
                 strokeWidth = 1.5f
             )
-            val cardinalityColor = Color(0xFFFFEB3B) // Giallo brillante
+            val cardinalityColor = Color(0xFFFFEB3B)
             val textLayoutResult = textMeasurer.measure(
                 text = connection.cardinality.display,
                 style = TextStyle(
                     color = cardinalityColor,
-                    fontSize = 14.sp, // Font più grande per migliore visibilità
+                    fontSize = 14.sp,
                     fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
                 )
             )
-            val offsetFactor = 0.5f // Centrato perfettamente
+            val offsetFactor = 0.5f
             val labelCenterX = centerX + (entityCenterX - centerX) * offsetFactor
             val labelCenterY = centerY + (entityCenterY - centerY) * offsetFactor
             val textWidth = textLayoutResult.size.width.toFloat()
@@ -703,8 +720,6 @@ private fun handleDrag(state: DiagramState, dragAmount: Offset) {
             )
         }
     }
-}
-private fun handleDragEnd() {
 }
 private fun isPointInDiamond(point: Offset, relationship: Relationship): Boolean {
     val centerX = relationship.x + relationship.width / 2

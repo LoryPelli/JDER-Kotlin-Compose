@@ -1,13 +1,52 @@
 package com.jder.ui.components
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.CenterFocusWeak
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.FolderOpen
+import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.filled.NearMe
+import androidx.compose.material.icons.filled.Redo
+import androidx.compose.material.icons.filled.Save
+import androidx.compose.material.icons.filled.SaveAs
+import androidx.compose.material.icons.filled.Undo
+import androidx.compose.material.icons.filled.ZoomIn
+import androidx.compose.material.icons.filled.ZoomOut
+import androidx.compose.material3.Divider
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconToggleButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.jder.domain.model.DiagramState
 import com.jder.domain.model.ToolMode
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DiagramToolbar(
@@ -44,9 +83,11 @@ fun DiagramToolbar(
                 Text(text = title)
             },
             actions = {
+                val coroutineScope = rememberCoroutineScope()
                 var showFileMenu by remember { mutableStateOf(false) }
                 var showExportMenu by remember { mutableStateOf(false) }
                 var showViewMenu by remember { mutableStateOf(false) }
+
                 Box {
                     TextButton(onClick = { showFileMenu = true }) {
                         Text("File")
@@ -58,16 +99,22 @@ fun DiagramToolbar(
                         DropdownMenuItem(
                             text = { Text("Nuovo Diagramma") },
                             onClick = {
-                                onNewDiagram()
-                                showFileMenu = false
+                                coroutineScope.launch {
+                                    delay(150)
+                                    showFileMenu = false
+                                    onNewDiagram()
+                                }
                             },
                             leadingIcon = { Icon(Icons.Default.Add, null) }
                         )
                         DropdownMenuItem(
                             text = { Text("Apri Diagramma...") },
                             onClick = {
-                                onOpenDiagram()
-                                showFileMenu = false
+                                coroutineScope.launch {
+                                    delay(150)
+                                    showFileMenu = false
+                                    onOpenDiagram()
+                                }
                             },
                             leadingIcon = { Icon(Icons.Default.FolderOpen, null) }
                         )
@@ -75,16 +122,22 @@ fun DiagramToolbar(
                         DropdownMenuItem(
                             text = { Text("Salva") },
                             onClick = {
-                                onSaveDiagram()
-                                showFileMenu = false
+                                coroutineScope.launch {
+                                    delay(150)
+                                    showFileMenu = false
+                                    onSaveDiagram()
+                                }
                             },
                             leadingIcon = { Icon(Icons.Default.Save, null) }
                         )
                         DropdownMenuItem(
                             text = { Text("Salva Come...") },
                             onClick = {
-                                onSaveAsDiagram()
-                                showFileMenu = false
+                                coroutineScope.launch {
+                                    delay(150)
+                                    showFileMenu = false
+                                    onSaveAsDiagram()
+                                }
                             },
                             leadingIcon = { Icon(Icons.Default.SaveAs, null) }
                         )
@@ -92,13 +145,16 @@ fun DiagramToolbar(
                         DropdownMenuItem(
                             text = { Text("Elimina Elemento Selezionato") },
                             onClick = {
-                                when {
-                                    state.selectedEntityId != null ->
-                                        state.deleteEntity(state.selectedEntityId!!)
-                                    state.selectedRelationshipId != null ->
-                                        state.deleteRelationship(state.selectedRelationshipId!!)
+                                coroutineScope.launch {
+                                    delay(150)
+                                    showFileMenu = false
+                                    when {
+                                        state.selectedEntityId != null ->
+                                            state.deleteEntity(state.selectedEntityId!!)
+                                        state.selectedRelationshipId != null ->
+                                            state.deleteRelationship(state.selectedRelationshipId!!)
+                                    }
                                 }
-                                showFileMenu = false
                             },
                             leadingIcon = { Icon(Icons.Default.Delete, null) },
                             enabled = state.selectedEntityId != null || state.selectedRelationshipId != null
@@ -116,8 +172,11 @@ fun DiagramToolbar(
                         DropdownMenuItem(
                             text = { Text("Esporta come PNG...") },
                             onClick = {
-                                onExportPNG()
-                                showExportMenu = false
+                                coroutineScope.launch {
+                                    delay(150)
+                                    showExportMenu = false
+                                    onExportPNG()
+                                }
                             },
                             leadingIcon = { Icon(Icons.Default.Image, "Esporta diagramma come immagine PNG") }
                         )
@@ -134,24 +193,33 @@ fun DiagramToolbar(
                         DropdownMenuItem(
                             text = { Text("Zoom In") },
                             onClick = {
-                                onZoomIn()
-                                showViewMenu = false
+                                coroutineScope.launch {
+                                    delay(150)
+                                    showViewMenu = false
+                                    onZoomIn()
+                                }
                             },
                             leadingIcon = { Icon(Icons.Default.ZoomIn, null) }
                         )
                         DropdownMenuItem(
                             text = { Text("Zoom Out") },
                             onClick = {
-                                onZoomOut()
-                                showViewMenu = false
+                                coroutineScope.launch {
+                                    delay(150)
+                                    showViewMenu = false
+                                    onZoomOut()
+                                }
                             },
                             leadingIcon = { Icon(Icons.Default.ZoomOut, null) }
                         )
                         DropdownMenuItem(
                             text = { Text("Reset Zoom") },
                             onClick = {
-                                onResetZoom()
-                                showViewMenu = false
+                                coroutineScope.launch {
+                                    delay(150)
+                                    showViewMenu = false
+                                    onResetZoom()
+                                }
                             },
                             leadingIcon = { Icon(Icons.Default.CenterFocusWeak, null) }
                         )
@@ -212,7 +280,7 @@ fun DiagramToolbar(
                 Text(
                     text = zoomPercentage,
                     style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(horizontal = 8.dp).align(androidx.compose.ui.Alignment.CenterVertically)
+                    modifier = Modifier.padding(horizontal = 8.dp).align(Alignment.CenterVertically)
                 )
                 IconButton(onClick = onZoomOut) {
                     Icon(Icons.Default.ZoomOut, "Zoom Out")
