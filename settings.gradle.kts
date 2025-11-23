@@ -1,4 +1,4 @@
-rootProject.name = "JDER-Kotlin-Compose"
+rootProject.name = "JDER"
 
 pluginManagement {
     repositories {
