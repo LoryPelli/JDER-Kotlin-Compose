@@ -3,6 +3,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -39,14 +40,14 @@ fun ERDiagramCanvas(
     modifier: Modifier = Modifier
 ) {
     val textMeasurer = rememberTextMeasurer()
-    val entityColor = Color(0xFF64B5F6)
-    val relationshipColor = Color(0xFFE57373)
-    val selectedColor = Color(0xFFFFD54F)
-    val textColor = Color(0xFFFFFFFF)
-    val backgroundColor = Color(0xFF1E1E1E)
-    val surfaceColor = Color(0xFF2D2D2D)
-    val connectionColor = remember { Color(0xFFBDBDBD) }
-    val gridColor = remember { Color(0xFF424242) }
+    val entityColor = MaterialTheme.colorScheme.primary
+    val relationshipColor = MaterialTheme.colorScheme.error
+    val selectedColor = MaterialTheme.colorScheme.tertiary
+    val textColor = MaterialTheme.colorScheme.onSurface
+    val backgroundColor = MaterialTheme.colorScheme.background
+    val surfaceColor = MaterialTheme.colorScheme.surface
+    val connectionColor = MaterialTheme.colorScheme.outline
+    val gridColor = MaterialTheme.colorScheme.surfaceVariant
     var isDragging by remember { mutableStateOf(false) }
     Canvas(
         modifier = modifier
@@ -368,10 +369,15 @@ private fun DrawScope.drawAttribute(
 ) {
     val radius = 20f
     val horizontalSpacing = 60f
-    val verticalSpacing = 50f
+    val verticalSpacing = 60f
     val startY = parentY - ((total - 1) * verticalSpacing / 2f)
     val attrX = parentX + horizontalSpacing
     val attrY = startY + (index * verticalSpacing)
+    val attributeBackgroundColor = Color(0xFF424242)
+    val normalAttributeColor = Color(0xFF90CAF9)
+    val primaryKeyColor = Color(0xFFFFEB3B)
+    val compositeColor = Color(0xFFFFA726)
+
     drawLine(
         color = textColor.copy(alpha = 0.4f),
         start = Offset(parentX, parentY),
@@ -381,19 +387,19 @@ private fun DrawScope.drawAttribute(
     when (attribute.type) {
         AttributeType.COMPOSITE -> {
             drawCircle(
-                color = Color(0xFF424242),
+                color = attributeBackgroundColor,
                 radius = radius,
                 center = Offset(attrX, attrY),
                 style = Fill
             )
             drawCircle(
-                color = Color(0xFFFFA726),
+                color = compositeColor,
                 radius = radius,
                 center = Offset(attrX, attrY),
                 style = Stroke(width = 2.5f)
             )
             drawCircle(
-                color = Color(0xFFFFA726),
+                color = compositeColor,
                 radius = radius - 5,
                 center = Offset(attrX, attrY),
                 style = Stroke(width = 2f)
@@ -402,8 +408,8 @@ private fun DrawScope.drawAttribute(
                 attribute.components.forEachIndexed { compIndex, component ->
                     drawAttributeComponent(
                         component = component,
-                        parentX = attrX,
-                        parentY = attrY + radius,
+                        parentX = attrX + radius,
+                        parentY = attrY,
                         index = compIndex,
                         total = attribute.components.size,
                         textMeasurer = textMeasurer
@@ -413,19 +419,19 @@ private fun DrawScope.drawAttribute(
         }
         AttributeType.MULTIVALUED -> {
             drawCircle(
-                color = Color(0xFF424242),
+                color = attributeBackgroundColor,
                 radius = radius,
                 center = Offset(attrX, attrY),
                 style = Fill
             )
             drawCircle(
-                color = Color(0xFF90CAF9),
+                color = normalAttributeColor,
                 radius = radius,
                 center = Offset(attrX, attrY),
                 style = Stroke(width = 2.5f)
             )
             drawCircle(
-                color = Color(0xFF90CAF9),
+                color = normalAttributeColor,
                 radius = radius - 5,
                 center = Offset(attrX, attrY),
                 style = Stroke(width = 2f)
@@ -433,13 +439,13 @@ private fun DrawScope.drawAttribute(
         }
         AttributeType.DERIVED -> {
             drawCircle(
-                color = Color(0xFF424242),
+                color = attributeBackgroundColor,
                 radius = radius,
                 center = Offset(attrX, attrY),
                 style = Fill
             )
             drawCircle(
-                color = Color(0xFF90CAF9),
+                color = normalAttributeColor,
                 radius = radius,
                 center = Offset(attrX, attrY),
                 style = Stroke(
@@ -449,9 +455,9 @@ private fun DrawScope.drawAttribute(
             )
         }
         else -> {
-            val circleStrokeColor = if (attribute.isPrimaryKey) Color(0xFFFFEB3B) else Color(0xFF90CAF9)
+            val circleStrokeColor = if (attribute.isPrimaryKey) primaryKeyColor else normalAttributeColor
             drawCircle(
-                color = Color(0xFF424242),
+                color = attributeBackgroundColor,
                 radius = radius,
                 center = Offset(attrX, attrY),
                 style = Fill
@@ -465,9 +471,9 @@ private fun DrawScope.drawAttribute(
         }
     }
     val text = attribute.name
-    val attributeTextColor = if (attribute.isPrimaryKey) Color(0xFFFFEB3B)
-                            else if (attribute.type == AttributeType.COMPOSITE) Color(0xFFFFA726)
-                            else Color(0xFFFFFFFF)
+    val attributeTextColor = if (attribute.isPrimaryKey) primaryKeyColor
+                            else if (attribute.type == AttributeType.COMPOSITE) compositeColor
+                            else textColor
     val textLayoutResult = textMeasurer.measure(
         text = text,
         style = TextStyle(
@@ -508,7 +514,7 @@ private fun DrawScope.drawAttribute(
         val multiplicityText = textMeasurer.measure(
             text = attribute.multiplicity,
             style = TextStyle(
-                color = Color(0xFF90CAF9).copy(alpha = 0.9f),
+                color = normalAttributeColor.copy(alpha = 0.9f),
                 fontSize = 11.sp,
                 fontWeight = androidx.compose.ui.text.font.FontWeight.Normal
             )
@@ -538,25 +544,29 @@ private fun DrawScope.drawAttributeComponent(
     textMeasurer: TextMeasurer
 ) {
     val radius = 12f
-    val horizontalSpacing = 50f
-    val verticalSpacing = 35f
+    val horizontalSpacing = 60f
+    val verticalSpacing = 40f
     val startY = parentY - ((total - 1) * verticalSpacing / 2f)
     val compX = parentX + horizontalSpacing
     val compY = startY + (index * verticalSpacing)
+    val compositeColor = Color(0xFFFFA726)
+    val componentColor = Color(0xFFFFCC80)
+    val attributeBackgroundColor = Color(0xFF424242)
+
     drawLine(
-        color = Color(0xFFFFA726).copy(alpha = 0.4f),
+        color = compositeColor.copy(alpha = 0.4f),
         start = Offset(parentX, parentY),
         end = Offset(compX, compY),
         strokeWidth = 1.2f
     )
     drawCircle(
-        color = Color(0xFF424242),
+        color = attributeBackgroundColor,
         radius = radius,
         center = Offset(compX, compY),
         style = Fill
     )
     drawCircle(
-        color = Color(0xFFFFCC80),
+        color = componentColor,
         radius = radius,
         center = Offset(compX, compY),
         style = Stroke(width = 2f)
@@ -564,7 +574,7 @@ private fun DrawScope.drawAttributeComponent(
     val textLayoutResult = textMeasurer.measure(
         text = component.name,
         style = TextStyle(
-            color = Color(0xFFFFCC80),
+            color = componentColor,
             fontSize = 11.sp,
             fontWeight = androidx.compose.ui.text.font.FontWeight.Normal
         )
@@ -581,7 +591,7 @@ private fun DrawScope.drawAttributeComponent(
         cornerRadius = androidx.compose.ui.geometry.CornerRadius(3f, 3f)
     )
     drawRoundRect(
-        color = Color(0xFFFFCC80).copy(alpha = 0.4f),
+        color = componentColor.copy(alpha = 0.4f),
         topLeft = Offset(textX - 4, textY - 2),
         size = Size(
             textLayoutResult.size.width.toFloat() + 8,
@@ -603,6 +613,8 @@ private fun DrawScope.drawConnectionsForRelationship(
 ) {
     val centerX = relationship.x + relationship.width / 2
     val centerY = relationship.y + relationship.height / 2
+    val cardinalityColor = Color(0xFFFFEB3B)
+
     relationship.connections.forEach { connection ->
         val entity = entities.find { it.id == connection.entityId }
         if (entity != null) {
@@ -614,7 +626,6 @@ private fun DrawScope.drawConnectionsForRelationship(
                 end = Offset(entityCenterX, entityCenterY),
                 strokeWidth = 1.5f
             )
-            val cardinalityColor = Color(0xFFFFEB3B)
             val textLayoutResult = textMeasurer.measure(
                 text = connection.cardinality.display,
                 style = TextStyle(
