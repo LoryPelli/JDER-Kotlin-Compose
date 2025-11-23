@@ -26,7 +26,11 @@ fun main() = application {
     }
     Window(
         onCloseRequest = {
-            exitApplication()
+            if (diagramState.isModified) {
+                showExitDialog = true
+            } else {
+                exitApplication()
+            }
         },
         title = "JDER - Java Diagrammi E-R",
         state = windowState
