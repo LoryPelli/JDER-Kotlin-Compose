@@ -56,10 +56,10 @@ object CustomIcons {
                     strokeLineMiter = 1.0f,
                     pathFillType = PathFillType.NonZero
                 ) {
-                    moveTo(12f, 4f)   // Top
-                    lineTo(20f, 12f)  // Right
-                    lineTo(12f, 20f)  // Bottom
-                    lineTo(4f, 12f)   // Left
+                    moveTo(12f, 4f)
+                    lineTo(20f, 12f)
+                    lineTo(12f, 20f)
+                    lineTo(4f, 12f)
                     close()
                 }
             }.build()

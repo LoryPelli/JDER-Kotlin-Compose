@@ -18,7 +18,7 @@ class DiagramState {
     var panOffset by mutableStateOf(androidx.compose.ui.geometry.Offset.Zero)
     private val undoStack = mutableListOf<ERDiagram>()
     private val redoStack = mutableListOf<ERDiagram>()
-    private val maxUndoSize = 50 // Limite massimo di undo
+    private val maxUndoSize = 50
     private fun saveState() {
         undoStack.add(diagram.copy(
             entities = diagram.entities.map { it.copy(attributes = it.attributes.toList()) },
@@ -30,7 +30,7 @@ class DiagramState {
             }
         ))
         if (undoStack.size > maxUndoSize) {
-            undoStack.removeAt(0) // Rimuovi il più vecchio
+            undoStack.removeAt(0)
         }
         redoStack.clear()
     }

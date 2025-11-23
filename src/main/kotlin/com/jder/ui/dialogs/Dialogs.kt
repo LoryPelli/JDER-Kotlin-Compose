@@ -212,7 +212,7 @@ private fun AttributeDialog(
                     Switch(
                         checked = isPrimaryKey,
                         onCheckedChange = { isPrimaryKey = it },
-                        enabled = attributeType != AttributeType.KEY // Disabilita se tipo è KEY
+                        enabled = attributeType != AttributeType.KEY
                     )
                 }
                 if (attributeType == AttributeType.KEY) {

@@ -39,14 +39,14 @@ fun ERDiagramCanvas(
     modifier: Modifier = Modifier
 ) {
     val textMeasurer = rememberTextMeasurer()
-    val entityColor = Color(0xFF64B5F6) // Azzurro chiaro brillante
-    val relationshipColor = Color(0xFFE57373) // Rosso/rosa chiaro
-    val selectedColor = Color(0xFFFFD54F) // Giallo brillante per selezione
-    val textColor = Color(0xFFFFFFFF) // Bianco puro
-    val backgroundColor = Color(0xFF1E1E1E) // Grigio scuro
-    val surfaceColor = Color(0xFF2D2D2D) // Grigio medio per riempimento
-    val connectionColor = remember { Color(0xFFBDBDBD) } // Grigio chiaro
-    val gridColor = remember { Color(0xFF424242) } // Griglia visibile
+    val entityColor = Color(0xFF64B5F6)
+    val relationshipColor = Color(0xFFE57373)
+    val selectedColor = Color(0xFFFFD54F)
+    val textColor = Color(0xFFFFFFFF)
+    val backgroundColor = Color(0xFF1E1E1E)
+    val surfaceColor = Color(0xFF2D2D2D)
+    val connectionColor = remember { Color(0xFFBDBDBD) }
+    val gridColor = remember { Color(0xFF424242) }
     var isDragging by remember { mutableStateOf(false) }
     Canvas(
         modifier = modifier
@@ -312,10 +312,10 @@ private fun DrawScope.drawRelationship(
     val centerX = relationship.x + relationship.width / 2
     val centerY = relationship.y + relationship.height / 2
     val path = Path().apply {
-        moveTo(centerX, relationship.y) // Top
-        lineTo(relationship.x + relationship.width, centerY) // Right
-        lineTo(centerX, relationship.y + relationship.height) // Bottom
-        lineTo(relationship.x, centerY) // Left
+        moveTo(centerX, relationship.y)
+        lineTo(relationship.x + relationship.width, centerY)
+        lineTo(centerX, relationship.y + relationship.height)
+        lineTo(relationship.x, centerY)
         close()
     }
     drawPath(
@@ -367,8 +367,8 @@ private fun DrawScope.drawAttribute(
     textColor: Color
 ) {
     val radius = 20f
-    val horizontalSpacing = 60f // Aumentato per più spazio
-    val verticalSpacing = 50f // Aumentato per evitare sovrapposizioni
+    val horizontalSpacing = 60f
+    val verticalSpacing = 50f
     val startY = parentY - ((total - 1) * verticalSpacing / 2f)
     val attrX = parentX + horizontalSpacing
     val attrY = startY + (index * verticalSpacing)
@@ -569,8 +569,8 @@ private fun DrawScope.drawAttributeComponent(
             fontWeight = androidx.compose.ui.text.font.FontWeight.Normal
         )
     )
-    val textX = compX + radius + 8 // A destra del cerchio
-    val textY = compY - textLayoutResult.size.height / 2 // Centrato verticalmente
+    val textX = compX + radius + 8
+    val textY = compY - textLayoutResult.size.height / 2
     drawRoundRect(
         color = Color(0xDD000000),
         topLeft = Offset(textX - 4, textY - 2),
@@ -631,7 +631,7 @@ private fun DrawScope.drawConnectionsForRelationship(
             val labelX = labelCenterX - textWidth / 2
             val labelY = labelCenterY - textHeight / 2
             drawRoundRect(
-                color = Color(0xDD000000), // Nero quasi opaco
+                color = Color(0xDD000000),
                 topLeft = Offset(labelX - 6, labelY - 3),
                 size = Size(
                     textWidth + 12,

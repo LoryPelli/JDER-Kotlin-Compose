@@ -200,7 +200,7 @@ fun DiagramToolbar(
                             leadingIcon = { Icon(Icons.Default.ZoomOut, null) }
                         )
                         DropdownMenuItem(
-                            text = { Text("Reset Zoom") },
+                            text = { Text("Reimposta Zoom") },
                             onClick = {
                                 coroutineScope.launch {
                                     delay(150)
