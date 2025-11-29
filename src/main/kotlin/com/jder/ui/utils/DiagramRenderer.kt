@@ -9,21 +9,83 @@ import java.awt.Font
 import java.awt.RenderingHints
 import java.awt.image.BufferedImage
 fun renderDiagramToBitmap(diagram: ERDiagram): ImageBitmap {
-    val padding = 150f
+    val padding = 200f
     val entities = diagram.entities
     val relationships = diagram.relationships
-    val minX = (entities.minOfOrNull { it.x } ?: 0f).coerceAtMost(
-        relationships.minOfOrNull { it.x } ?: 0f
-    ) - padding
-    val minY = (entities.minOfOrNull { it.y } ?: 0f).coerceAtMost(
-        relationships.minOfOrNull { it.y } ?: 0f
-    ) - padding
-    val maxX = (entities.maxOfOrNull { it.x + it.width } ?: 1000f).coerceAtLeast(
-        relationships.maxOfOrNull { it.x + it.width } ?: 1000f
-    ) + padding
-    val maxY = (entities.maxOfOrNull { it.y + it.height } ?: 1000f).coerceAtLeast(
-        relationships.maxOfOrNull { it.y + it.height } ?: 1000f
-    ) + padding
+    val allXCoords = mutableListOf<Float>()
+    val allYCoords = mutableListOf<Float>()
+    entities.forEach { entity ->
+        allXCoords.add(entity.x)
+        allXCoords.add(entity.x + entity.width)
+        allYCoords.add(entity.y)
+        allYCoords.add(entity.y + entity.height)
+        entity.attributes.forEachIndexed { index, attr ->
+            val centerX = entity.x + entity.width / 2
+            val centerY = entity.y + entity.height / 2
+            val arrowLength = 60f
+            val verticalSpacing = 60f
+            val startY = centerY - ((entity.attributes.size - 1) * verticalSpacing / 2f)
+            val defaultAttrX = entity.x + entity.width + arrowLength
+            val defaultAttrY = startY + (index * verticalSpacing)
+            val attrX = if (attr.x != 0f) centerX + attr.x else defaultAttrX
+            val attrY = if (attr.y != 0f) centerY + attr.y else defaultAttrY
+            allXCoords.add(attrX - 20)
+            allXCoords.add(attrX + 150)
+            allYCoords.add(attrY - 20)
+            allYCoords.add(attrY + 20)
+            if (attr.type == AttributeType.COMPOSITE && attr.components.isNotEmpty()) {
+                attr.components.forEachIndexed { compIndex, _ ->
+                    val horizontalSpacing = 60f
+                    val compVerticalSpacing = 40f
+                    val compStartY = attrY - ((attr.components.size - 1) * compVerticalSpacing / 2f)
+                    val compX = attrX + 20 + horizontalSpacing
+                    val compY = compStartY + (compIndex * compVerticalSpacing)
+                    allXCoords.add(compX - 12)
+                    allXCoords.add(compX + 100)
+                    allYCoords.add(compY - 12)
+                    allYCoords.add(compY + 12)
+                }
+            }
+        }
+    }
+    relationships.forEach { rel ->
+        allXCoords.add(rel.x)
+        allXCoords.add(rel.x + rel.width)
+        allYCoords.add(rel.y)
+        allYCoords.add(rel.y + rel.height)
+        rel.attributes.forEachIndexed { index, attr ->
+            val centerX = rel.x + rel.width / 2
+            val centerY = rel.y + rel.height / 2
+            val arrowLength = 60f
+            val verticalSpacing = 60f
+            val startY = centerY - ((rel.attributes.size - 1) * verticalSpacing / 2f)
+            val defaultAttrX = rel.x + rel.width + arrowLength
+            val defaultAttrY = startY + (index * verticalSpacing)
+            val attrX = if (attr.x != 0f) centerX + attr.x else defaultAttrX
+            val attrY = if (attr.y != 0f) centerY + attr.y else defaultAttrY
+            allXCoords.add(attrX - 20)
+            allXCoords.add(attrX + 150)
+            allYCoords.add(attrY - 20)
+            allYCoords.add(attrY + 20)
+            if (attr.type == AttributeType.COMPOSITE && attr.components.isNotEmpty()) {
+                attr.components.forEachIndexed { compIndex, _ ->
+                    val horizontalSpacing = 60f
+                    val compVerticalSpacing = 40f
+                    val compStartY = attrY - ((attr.components.size - 1) * compVerticalSpacing / 2f)
+                    val compX = attrX + 20 + horizontalSpacing
+                    val compY = compStartY + (compIndex * compVerticalSpacing)
+                    allXCoords.add(compX - 12)
+                    allXCoords.add(compX + 100)
+                    allYCoords.add(compY - 12)
+                    allYCoords.add(compY + 12)
+                }
+            }
+        }
+    }
+    val minX = (allXCoords.minOrNull() ?: 0f) - padding
+    val minY = (allYCoords.minOrNull() ?: 0f) - padding
+    val maxX = (allXCoords.maxOrNull() ?: 1000f) + padding
+    val maxY = (allYCoords.maxOrNull() ?: 1000f) + padding
     val width = (maxX - minX).toInt().coerceAtLeast(800)
     val height = (maxY - minY).toInt().coerceAtLeast(600)
     val bufferedImage = BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB)
@@ -109,10 +171,43 @@ fun renderDiagramToBitmap(diagram: ERDiagram): ImageBitmap {
                 else -> Color(0x90CAF9)
             }
             g2d.color = attrColor
-            g2d.drawOval(attrX - radius, attrY - radius, radius * 2, radius * 2)
+            when (attribute.type) {
+                AttributeType.COMPOSITE -> {
+                    g2d.drawOval(attrX - radius, attrY - radius, radius * 2, radius * 2)
+                    g2d.drawOval(attrX - radius + 5, attrY - radius + 5, (radius - 5) * 2, (radius - 5) * 2)
+                }
+                AttributeType.MULTIVALUED -> {
+                    g2d.drawOval(attrX - radius, attrY - radius, radius * 2, radius * 2)
+                    g2d.drawOval(attrX - radius + 5, attrY - radius + 5, (radius - 5) * 2, (radius - 5) * 2)
+                }
+                else -> {
+                    g2d.drawOval(attrX - radius, attrY - radius, radius * 2, radius * 2)
+                }
+            }
             g2d.font = Font("Arial", Font.BOLD, 12)
             g2d.color = Color.BLACK
             g2d.drawString(attribute.name, attrX + radius + 10, attrY + 5)
+            if (attribute.type == AttributeType.COMPOSITE && attribute.components.isNotEmpty()) {
+                val compRadius = 12
+                val horizontalSpacing = 60
+                val compVerticalSpacing = 40
+                val compStartY = attrY - ((attribute.components.size - 1) * compVerticalSpacing / 2)
+                attribute.components.forEachIndexed { compIndex, component ->
+                    val compX = attrX + radius + horizontalSpacing
+                    val compY = compStartY + (compIndex * compVerticalSpacing)
+                    g2d.color = Color(0xBDBDBD)
+                    g2d.stroke = BasicStroke(1.5f)
+                    g2d.drawLine(attrX + radius, attrY, compX, compY)
+                    g2d.color = Color.WHITE
+                    g2d.fillOval(compX - compRadius, compY - compRadius, compRadius * 2, compRadius * 2)
+                    g2d.color = Color(0xFFA726)
+                    g2d.stroke = BasicStroke(2f)
+                    g2d.drawOval(compX - compRadius, compY - compRadius, compRadius * 2, compRadius * 2)
+                    g2d.font = Font("Arial", Font.PLAIN, 11)
+                    g2d.color = Color.BLACK
+                    g2d.drawString(component.name, compX + compRadius + 8, compY + 4)
+                }
+            }
         }
     }
     relationships.forEach { relationship ->
@@ -177,10 +272,43 @@ fun renderDiagramToBitmap(diagram: ERDiagram): ImageBitmap {
                 else -> Color(0x90CAF9)
             }
             g2d.color = attrColor
-            g2d.drawOval(attrX - radius, attrY - radius, radius * 2, radius * 2)
+            when (attribute.type) {
+                AttributeType.COMPOSITE -> {
+                    g2d.drawOval(attrX - radius, attrY - radius, radius * 2, radius * 2)
+                    g2d.drawOval(attrX - radius + 5, attrY - radius + 5, (radius - 5) * 2, (radius - 5) * 2)
+                }
+                AttributeType.MULTIVALUED -> {
+                    g2d.drawOval(attrX - radius, attrY - radius, radius * 2, radius * 2)
+                    g2d.drawOval(attrX - radius + 5, attrY - radius + 5, (radius - 5) * 2, (radius - 5) * 2)
+                }
+                else -> {
+                    g2d.drawOval(attrX - radius, attrY - radius, radius * 2, radius * 2)
+                }
+            }
             g2d.font = Font("Arial", Font.BOLD, 12)
             g2d.color = Color.BLACK
             g2d.drawString(attribute.name, attrX + radius + 10, attrY + 5)
+            if (attribute.type == AttributeType.COMPOSITE && attribute.components.isNotEmpty()) {
+                val compRadius = 12
+                val horizontalSpacing = 60
+                val compVerticalSpacing = 40
+                val compStartY = attrY - ((attribute.components.size - 1) * compVerticalSpacing / 2)
+                attribute.components.forEachIndexed { compIndex, component ->
+                    val compX = attrX + radius + horizontalSpacing
+                    val compY = compStartY + (compIndex * compVerticalSpacing)
+                    g2d.color = Color(0xBDBDBD)
+                    g2d.stroke = BasicStroke(1.5f)
+                    g2d.drawLine(attrX + radius, attrY, compX, compY)
+                    g2d.color = Color.WHITE
+                    g2d.fillOval(compX - compRadius, compY - compRadius, compRadius * 2, compRadius * 2)
+                    g2d.color = Color(0xFFA726)
+                    g2d.stroke = BasicStroke(2f)
+                    g2d.drawOval(compX - compRadius, compY - compRadius, compRadius * 2, compRadius * 2)
+                    g2d.font = Font("Arial", Font.PLAIN, 11)
+                    g2d.color = Color.BLACK
+                    g2d.drawString(component.name, compX + compRadius + 8, compY + 4)
+                }
+            }
         }
     }
     g2d.dispose()

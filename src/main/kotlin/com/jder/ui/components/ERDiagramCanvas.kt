@@ -57,19 +57,22 @@ fun ERDiagramCanvas(
     val textBackgroundColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f)
     var isDragging by remember { mutableStateOf(false) }
     var draggedAttributeInfo by remember { mutableStateOf<Triple<String?, String?, String?>>(Triple(null, null, null)) }
+    var totalDragDistance by remember { mutableStateOf(0f) }
     Canvas(
         modifier = modifier
             .fillMaxSize()
             .pointerInput(state.diagram.entities.size, state.diagram.relationships.size) {
                 detectTapGestures(
                     onTap = { offset ->
-                        if (!isDragging) {
+                        if (!isDragging && totalDragDistance < 5f) {
                             val adjustedOffset = Offset(
                                 (offset.x - state.panOffset.x) / state.zoom,
                                 (offset.y - state.panOffset.y) / state.zoom
                             )
                             handleCanvasTap(state, adjustedOffset)
                         }
+                        isDragging = false
+                        totalDragDistance = 0f
                     },
                     onLongPress = { offset ->
                         val adjustedOffset = Offset(
@@ -82,15 +85,11 @@ fun ERDiagramCanvas(
                             adjustedOffset.y >= entity.y &&
                             adjustedOffset.y <= entity.y + entity.height
                         }
-                        val clickedRelationship = state.diagram.relationships.find { rel ->
-                            val centerX = rel.x + rel.width / 2
-                            val centerY = rel.y + rel.height / 2
-                            val halfWidth = rel.width / 2
-                            val halfHeight = rel.height / 2
-                            val dx = kotlin.math.abs(adjustedOffset.x - centerX) / halfWidth
-                            val dy = kotlin.math.abs(adjustedOffset.y - centerY) / halfHeight
-                            dx + dy < 1f
-                        }
+                        val clickedRelationship = if (clickedEntity == null) {
+                            state.diagram.relationships.find { rel ->
+                                isPointInDiamond(adjustedOffset, rel)
+                            }
+                        } else null
                         when {
                             clickedEntity != null -> {
                                 state.selectEntity(clickedEntity.id)
@@ -121,15 +120,11 @@ fun ERDiagramCanvas(
                                 adjustedOffset.y >= entity.y &&
                                 adjustedOffset.y <= entity.y + entity.height
                             }
-                            val clickedRelationship = state.diagram.relationships.find { rel ->
-                                val centerX = rel.x + rel.width / 2
-                                val centerY = rel.y + rel.height / 2
-                                val halfWidth = rel.width / 2
-                                val halfHeight = rel.height / 2
-                                val dx = kotlin.math.abs(adjustedOffset.x - centerX) / halfWidth
-                                val dy = kotlin.math.abs(adjustedOffset.y - centerY) / halfHeight
-                                dx + dy < 1f
-                            }
+                            val clickedRelationship = if (clickedEntity == null) {
+                                state.diagram.relationships.find { rel ->
+                                    isPointInDiamond(adjustedOffset, rel)
+                                }
+                            } else null
                             when {
                                 clickedEntity != null -> {
                                     state.selectEntity(clickedEntity.id)
@@ -148,15 +143,25 @@ fun ERDiagramCanvas(
                 detectDragGestures(
                     onDragStart = { offset ->
                         isDragging = false
+                        totalDragDistance = 0f
                         draggedAttributeInfo = handleDragStart(state, offset)
                     },
                     onDrag = { change, dragAmount ->
                         change.consume()
-                        isDragging = true
-                        handleDrag(state, dragAmount, draggedAttributeInfo.first, draggedAttributeInfo.second, draggedAttributeInfo.third)
+                        totalDragDistance += kotlin.math.sqrt(
+                            dragAmount.x * dragAmount.x + dragAmount.y * dragAmount.y
+                        )
+                        if (totalDragDistance > 5f) {
+                            isDragging = true
+                        }
+                        if (isDragging) {
+                            handleDrag(state, dragAmount, draggedAttributeInfo.first, draggedAttributeInfo.second, draggedAttributeInfo.third)
+                        }
                     },
                     onDragEnd = {
-                        isDragging = false
+                        if (!isDragging) {
+                            totalDragDistance = 0f
+                        }
                         draggedAttributeInfo = Triple(null, null, null)
                     }
                 )
@@ -794,8 +799,7 @@ private fun handleDragStart(state: DiagramState, offset: Offset): Triple<String?
                 (adjustedOffset.x - attrPos.x).let { it * it } +
                 (adjustedOffset.y - attrPos.y).let { it * it }
             )
-            if (distance <= 20f) {
-                state.selectEntity(entity.id)
+            if (distance <= 30f) {
                 state.saveDragStartState()
                 return Triple(attribute.id, entity.id, null)
             }
@@ -816,8 +820,7 @@ private fun handleDragStart(state: DiagramState, offset: Offset): Triple<String?
                 (adjustedOffset.x - attrPos.x).let { it * it } +
                 (adjustedOffset.y - attrPos.y).let { it * it }
             )
-            if (distance <= 20f) {
-                state.selectRelationship(rel.id)
+            if (distance <= 30f) {
                 state.saveDragStartState()
                 return Triple(attribute.id, null, rel.id)
             }
