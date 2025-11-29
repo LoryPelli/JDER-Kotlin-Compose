@@ -10,7 +10,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
-import androidx.compose.foundation.isSystemInDarkTheme
 import com.jder.domain.model.DiagramState
 import com.jder.ui.screens.MainScreen
 import com.jder.ui.theme.JDERTheme
@@ -21,8 +20,7 @@ fun main() = application {
         height = 800.dp
     )
     val diagramState = remember { DiagramState() }
-    val isSystemInDark = isSystemInDarkTheme()
-    val themeState = remember { ThemeState(initialDarkTheme = isSystemInDark) }
+    val themeState = remember { ThemeState() }
     var showExitDialog by remember { mutableStateOf(false) }
     var shouldExit by remember { mutableStateOf(false) }
     if (shouldExit) {
