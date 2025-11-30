@@ -20,11 +20,6 @@ dependencies {
     implementation(compose.materialIconsExtended)
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1")
 }
-compose.desktop {
-    application {
-        mainClass = "com.jder.MainKt"
-    }
-}
 java {
     sourceCompatibility = JavaVersion.VERSION_1_8
     targetCompatibility = JavaVersion.VERSION_1_8
