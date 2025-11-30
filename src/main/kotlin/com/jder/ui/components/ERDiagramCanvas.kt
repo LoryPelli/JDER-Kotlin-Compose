@@ -770,11 +770,11 @@ private fun handleCanvasTap(state: DiagramState, offset: Offset) {
             }
         }
         ToolMode.ENTITY -> {
-            state.addEntity(offset.x - 70f, offset.y - 35f)
+            state.addEntity(offset.x - 70f, offset.y - 35f, "Nuova Entità")
             state.toolMode = ToolMode.SELECT
         }
         ToolMode.RELATIONSHIP -> {
-            state.addRelationship(offset.x - 60f, offset.y - 60f)
+            state.addRelationship(offset.x - 60f, offset.y - 60f, "Nuova Relazione")
             state.toolMode = ToolMode.SELECT
         }
     }

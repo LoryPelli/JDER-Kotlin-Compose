@@ -114,7 +114,7 @@ private val DarkColorScheme = darkColorScheme(
 )
 @Composable
 fun JDERTheme(
-    darkTheme: Boolean = false,
+    darkTheme: Boolean,
     content: @Composable () -> Unit
 ) {
     val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme

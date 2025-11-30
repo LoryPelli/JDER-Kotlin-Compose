@@ -78,7 +78,7 @@ class DiagramState {
     }
     fun canUndo(): Boolean = undoStack.isNotEmpty()
     fun canRedo(): Boolean = redoStack.isNotEmpty()
-    fun addEntity(x: Float, y: Float, name: String = "Nuova Entità") {
+    fun addEntity(x: Float, y: Float, name: String) {
         saveState()
         val newEntity = Entity(
             id = UUID.randomUUID().toString(),
@@ -89,7 +89,7 @@ class DiagramState {
         diagram = diagram.copy(entities = diagram.entities + newEntity)
         isModified = true
     }
-    fun addRelationship(x: Float, y: Float, name: String = "Nuova Relazione") {
+    fun addRelationship(x: Float, y: Float, name: String) {
         saveState()
         val newRelationship = Relationship(
             id = UUID.randomUUID().toString(),
@@ -242,7 +242,7 @@ class DiagramState {
         selectedEntityId = null
         selectedRelationshipId = null
     }
-    fun loadDiagram(newDiagram: ERDiagram, filePath: String? = null) {
+    fun loadDiagram(newDiagram: ERDiagram, filePath: String?) {
         diagram = newDiagram
         currentFile = filePath
         isModified = false

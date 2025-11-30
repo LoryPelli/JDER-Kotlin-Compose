@@ -52,9 +52,9 @@ import com.jder.ui.theme.ThemeState
 import java.io.File
 @Composable
 fun MainScreen(
-    state: DiagramState = remember { DiagramState() },
-    repository: DiagramRepository = remember { DiagramRepository() },
-    themeState: ThemeState = remember { ThemeState() }
+    state: DiagramState,
+    repository: DiagramRepository,
+    themeState: ThemeState
 ) {
     var showEntityDialog by remember { mutableStateOf(false) }
     var showRelationshipDialog by remember { mutableStateOf(false) }
@@ -226,7 +226,8 @@ fun MainScreen(
                         state.redo()
                         snackbarMessage = "Azione ripristinata"
                     }
-                }
+                },
+                modifier = Modifier
             )
         }
     ) { paddingValues ->
@@ -470,6 +471,7 @@ fun MainScreen(
     if (showOpenDialog) {
         FileManagerDialog(
             mode = FileManagerMode.OPEN,
+            initialDirectory = File(System.getProperty("user.home")),
             fileExtension = ".json",
             title = "Apri Diagramma",
             onDismiss = { showOpenDialog = false },
@@ -490,6 +492,7 @@ fun MainScreen(
     if (showSaveAsDialog || showSaveDialog) {
         FileManagerDialog(
             mode = FileManagerMode.SAVE,
+            initialDirectory = File(System.getProperty("user.home")),
             fileExtension = ".json",
             title = "Salva Diagramma",
             onDismiss = {
@@ -517,6 +520,7 @@ fun MainScreen(
     if (showExportDialog) {
         FileManagerDialog(
             mode = FileManagerMode.SAVE,
+            initialDirectory = File(System.getProperty("user.home")),
             fileExtension = ".png",
             title = "Esporta come PNG",
             onDismiss = { showExportDialog = false },

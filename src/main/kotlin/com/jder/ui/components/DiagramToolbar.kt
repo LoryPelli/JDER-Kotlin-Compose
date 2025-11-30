@@ -59,9 +59,9 @@ fun DiagramToolbar(
     onZoomIn: () -> Unit,
     onZoomOut: () -> Unit,
     onResetZoom: () -> Unit,
-    onUndo: () -> Unit = {},
-    onRedo: () -> Unit = {},
-    modifier: Modifier = Modifier
+    onUndo: () -> Unit,
+    onRedo: () -> Unit,
+    modifier: Modifier
 ) {
     val title by remember {
         derivedStateOf {

@@ -29,6 +29,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -56,9 +57,9 @@ enum class FileManagerMode {
 @Composable
 fun FileManagerDialog(
     mode: FileManagerMode,
-    initialDirectory: File = File(System.getProperty("user.home")),
-    fileExtension: String = ".json",
-    title: String = if (mode == FileManagerMode.SAVE) "Salva file" else "Apri file",
+    initialDirectory: File,
+    fileExtension: String,
+    title: String,
     onDismiss: () -> Unit,
     onFileSelected: (File) -> Unit
 ) {
@@ -69,6 +70,7 @@ fun FileManagerDialog(
     var showInvalidPathDialog by remember { mutableStateOf(false) }
     var invalidPathError by remember { mutableStateOf("") }
     var refreshTrigger by remember { mutableStateOf(0) }
+    var showOnlySupportedFiles by remember { mutableStateOf(false) }
     var pathInput by remember {
         mutableStateOf(TextFieldValue(
             text = currentDirectory.absolutePath,
@@ -177,15 +179,39 @@ fun FileManagerDialog(
                         Icon(Icons.Default.Refresh, contentDescription = "Ricarica")
                     }
                 }
+                if (mode == FileManagerMode.OPEN && fileExtension == ".json") {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Mostra solo file JSON",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Switch(
+                            checked = showOnlySupportedFiles,
+                            onCheckedChange = { showOnlySupportedFiles = it }
+                        )
+                    }
+                }
                 Box(
                     modifier = Modifier.weight(1f).fillMaxWidth()
                 ) {
-                    val files = remember(currentDirectory, refreshTrigger) {
+                    val files = remember(currentDirectory, refreshTrigger, showOnlySupportedFiles) {
                         try {
-                            currentDirectory.listFiles()?.sortedWith(
+                            val allFiles = currentDirectory.listFiles()?.sortedWith(
                                 compareBy<File> { !it.isDirectory }
                                     .thenBy { it.name.lowercase() }
                             ) ?: emptyList()
+                            if (showOnlySupportedFiles) {
+                                allFiles.filter { file ->
+                                    file.isDirectory || file.extension == "json"
+                                }
+                            } else {
+                                allFiles
+                            }
                         } catch (_: Exception) {
                             emptyList()
                         }
