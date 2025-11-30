@@ -9,7 +9,6 @@ import java.awt.Font
 import java.awt.RenderingHints
 import java.awt.image.BufferedImage
 import kotlin.math.abs
-import kotlin.math.min
 import kotlin.math.sqrt
 fun renderDiagramToBitmap(diagram: ERDiagram): ImageBitmap {
     val padding = 200f
@@ -160,7 +159,7 @@ fun renderDiagramToBitmap(diagram: ERDiagram): ImageBitmap {
             val dyToStart = arrowStartY - entityCenterY
             val scaleX = if (dxToStart != 0) halfWidth / abs(dxToStart) else Float.MAX_VALUE
             val scaleY = if (dyToStart != 0) halfHeight / abs(dyToStart) else Float.MAX_VALUE
-            val scale = min(scaleX, scaleY)
+            val scale = minOf(scaleX, scaleY)
             val connectionX = (entityCenterX + dxToStart * scale).toInt()
             val connectionY = (entityCenterY + dyToStart * scale).toInt()
             g2d.color = Color(0xBDBDBD)
