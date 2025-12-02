@@ -1,5 +1,6 @@
 package com.jder.ui.components
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -13,6 +14,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Link
@@ -27,6 +29,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -43,7 +46,8 @@ fun PropertiesPanel(
     onEditAttribute: (Attribute) -> Unit,
     onDeleteAttribute: (String) -> Unit,
     onEditConnection: (String, Connection) -> Unit,
-    onDeleteConnection: (String) -> Unit
+    onDeleteConnection: (String) -> Unit,
+    onClose: () -> Unit
 ) {
     val scrollState = rememberScrollState()
     Column(
@@ -53,11 +57,26 @@ fun PropertiesPanel(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Text(
-            text = "Proprietà",
-            style = MaterialTheme.typography.titleLarge,
-            color = MaterialTheme.colorScheme.primary
-        )
+        Box(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(
+                text = "Proprietà",
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.align(Alignment.CenterStart)
+            )
+            IconButton(
+                onClick = onClose,
+                modifier = Modifier.align(Alignment.CenterEnd).size(32.dp)
+            ) {
+                Icon(
+                    Icons.Default.Close,
+                    contentDescription = "Chiudi pannello proprietà",
+                    tint = MaterialTheme.colorScheme.onSurface
+                )
+            }
+        }
         Divider()
         when {
             state.selectedEntityId != null -> {
@@ -256,7 +275,7 @@ private fun AttributeCard(
         Row(
             modifier = Modifier.fillMaxWidth().padding(8.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(

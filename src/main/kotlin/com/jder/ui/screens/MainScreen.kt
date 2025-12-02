@@ -333,6 +333,10 @@ fun MainScreen(
                                 state.deleteConnection(relId, entityId)
                                 snackbarMessage = "Connessione eliminata"
                             }
+                        },
+                        onClose = {
+                            state.selectEntity(null)
+                            state.selectRelationship(null)
                         }
                     )
                 }
