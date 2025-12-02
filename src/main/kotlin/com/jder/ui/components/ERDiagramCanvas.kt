@@ -179,7 +179,7 @@ fun ERDiagramCanvas(
             translate(state.panOffset.x, state.panOffset.y)
             scale(state.zoom, state.zoom, Offset.Zero)
         }) {
-            drawGrid(size, gridColor)
+            drawGrid(size, gridColor, state.zoom, state.panOffset)
             state.diagram.relationships.forEach { relationship ->
                 drawConnectionsForRelationship(
                     relationship = relationship,
@@ -231,22 +231,32 @@ fun ERDiagramCanvas(
         }
     }
 }
-private fun DrawScope.drawGrid(canvasSize: Size, color: Color, spacing: Float = 20f) {
-    val numVerticalLines = (canvasSize.width / spacing).toInt()
-    val numHorizontalLines = (canvasSize.height / spacing).toInt()
+private fun DrawScope.drawGrid(canvasSize: Size, color: Color, zoom: Float, panOffset: Offset, spacing: Float = 20f) {
+    val viewportWidth = canvasSize.width / zoom
+    val viewportHeight = canvasSize.height / zoom
+    val startX = -panOffset.x / zoom
+    val startY = -panOffset.y / zoom
+    val endX = startX + viewportWidth
+    val endY = startY + viewportHeight
+    val firstVerticalLine = (startX / spacing).toInt() * spacing
+    val firstHorizontalLine = (startY / spacing).toInt() * spacing
+    val numVerticalLines = ((endX - firstVerticalLine) / spacing).toInt() + 2
+    val numHorizontalLines = ((endY - firstHorizontalLine) / spacing).toInt() + 2
     for (i in 0..numVerticalLines) {
+        val x = firstVerticalLine + i * spacing
         drawLine(
             color = color,
-            start = Offset(i * spacing, 0f),
-            end = Offset(i * spacing, canvasSize.height),
+            start = Offset(x, startY),
+            end = Offset(x, endY),
             strokeWidth = 1f
         )
     }
     for (i in 0..numHorizontalLines) {
+        val y = firstHorizontalLine + i * spacing
         drawLine(
             color = color,
-            start = Offset(0f, i * spacing),
-            end = Offset(canvasSize.width, i * spacing),
+            start = Offset(startX, y),
+            end = Offset(endX, y),
             strokeWidth = 1f
         )
     }
