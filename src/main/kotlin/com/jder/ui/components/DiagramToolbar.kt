@@ -269,6 +269,27 @@ fun DiagramToolbar(
                 ) {
                     Icon(Icons.Default.Save, "Salva")
                 }
+                IconButton(
+                    onClick = {
+                        when {
+                            state.selectedEntityId != null ->
+                                state.deleteEntity(state.selectedEntityId!!)
+                            state.selectedRelationshipId != null ->
+                                state.deleteRelationship(state.selectedRelationshipId!!)
+                        }
+                    },
+                    enabled = state.selectedEntityId != null || state.selectedRelationshipId != null,
+                    modifier = Modifier.padding(horizontal = 4.dp)
+                ) {
+                    Icon(
+                        Icons.Default.Delete,
+                        "Elimina Elemento Selezionato",
+                        tint = if (state.selectedEntityId != null || state.selectedRelationshipId != null)
+                            MaterialTheme.colorScheme.error
+                        else
+                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                    )
+                }
                 Spacer(Modifier.weight(1f))
                 Text(
                     text = zoomPercentage,
