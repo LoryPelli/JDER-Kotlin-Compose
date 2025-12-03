@@ -6,8 +6,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
+import androidx.compose.ui.window.WindowPlacement
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
 import com.jder.data.DiagramRepository
@@ -15,11 +15,9 @@ import com.jder.domain.model.DiagramState
 import com.jder.ui.screens.MainScreen
 import com.jder.ui.theme.JDERTheme
 import com.jder.ui.theme.ThemeState
+import java.awt.Dimension
 fun main() = application {
-    val windowState = rememberWindowState(
-        width = 1200.dp,
-        height = 800.dp
-    )
+    val windowState = rememberWindowState(placement = WindowPlacement.Maximized)
     val diagramState = remember { DiagramState() }
     val themeState = remember { ThemeState() }
     val repository = remember { DiagramRepository() }
@@ -39,6 +37,7 @@ fun main() = application {
         title = "JDER - Java Diagrammi E/R",
         state = windowState
     ) {
+        window.minimumSize = Dimension(800, 600)
         JDERTheme(darkTheme = themeState.isDarkTheme) {
             MainScreen(
                 state = diagramState,
