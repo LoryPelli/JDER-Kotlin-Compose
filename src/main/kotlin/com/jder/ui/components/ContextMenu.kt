@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AutoFixHigh
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Link
@@ -35,7 +36,9 @@ fun ContextMenu(
     onEdit: () -> Unit,
     onDelete: () -> Unit,
     onAddAttribute: () -> Unit,
-    onAddConnection: (() -> Unit)? = null
+    onAddConnection: (() -> Unit)? = null,
+    onConvertToAssociativeEntity: (() -> Unit)? = null,
+    isNtoNRelationship: Boolean = false
 ) {
     val coroutineScope = rememberCoroutineScope()
     Popup(
@@ -112,6 +115,38 @@ fun ContextMenu(
                             }
                         },
                         leadingIcon = null
+                    )
+                }
+                if (onConvertToAssociativeEntity != null) {
+                    DropdownMenuItem(
+                        text = {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    Icons.Default.AutoFixHigh,
+                                    null,
+                                    modifier = Modifier.size(20.dp),
+                                    tint = if (isNtoNRelationship) MaterialTheme.colorScheme.primary
+                                          else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                                )
+                                Spacer(Modifier.width(12.dp))
+                                Text(
+                                    "Converti in Entità Associativa",
+                                    color = if (isNtoNRelationship) MaterialTheme.colorScheme.onSurface
+                                           else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                                )
+                            }
+                        },
+                        onClick = {
+                            if (isNtoNRelationship) {
+                                coroutineScope.launch {
+                                    delay(150)
+                                    onDismiss()
+                                    onConvertToAssociativeEntity()
+                                }
+                            }
+                        },
+                        leadingIcon = null,
+                        enabled = isNtoNRelationship
                     )
                 }
                 Divider()

@@ -14,6 +14,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AutoFixHigh
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
@@ -49,6 +50,7 @@ fun PropertiesPanel(
     onDeleteAttribute: (String) -> Unit,
     onEditConnection: (String, Connection) -> Unit,
     onDeleteConnection: (String) -> Unit,
+    onConvertToAssociativeEntity: () -> Unit,
     onClose: () -> Unit
 ) {
     val scrollState = rememberScrollState()
@@ -105,7 +107,8 @@ fun PropertiesPanel(
                         onEditAttribute = onEditAttribute,
                         onDeleteAttribute = onDeleteAttribute,
                         onEditConnection = onEditConnection,
-                        onDeleteConnection = onDeleteConnection
+                        onDeleteConnection = onDeleteConnection,
+                        onConvertToAssociativeEntity = onConvertToAssociativeEntity
                     )
                 }
             }
@@ -186,8 +189,14 @@ private fun RelationshipPropertiesContent(
     onEditAttribute: (Attribute) -> Unit,
     onDeleteAttribute: (String) -> Unit,
     onEditConnection: (String, Connection) -> Unit,
-    onDeleteConnection: (String) -> Unit
+    onDeleteConnection: (String) -> Unit,
+    onConvertToAssociativeEntity: () -> Unit
 ) {
+    val isNtoN = relationship.connections.size == 2 && relationship.connections.all { conn ->
+        conn.cardinality == com.jder.domain.model.Cardinality.MANY ||
+        conn.cardinality == com.jder.domain.model.Cardinality.ZERO_MANY ||
+        conn.cardinality == com.jder.domain.model.Cardinality.ONE_MANY
+    }
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -232,6 +241,15 @@ private fun RelationshipPropertiesContent(
         Icon(Icons.Default.Link, contentDescription = null, modifier = Modifier.size(18.dp))
         Spacer(Modifier.width(8.dp))
         Text("Aggiungi Connessione")
+    }
+    OutlinedButton(
+        onClick = onConvertToAssociativeEntity,
+        modifier = Modifier.fillMaxWidth(),
+        enabled = isNtoN
+    ) {
+        Icon(Icons.Default.AutoFixHigh, contentDescription = null, modifier = Modifier.size(18.dp))
+        Spacer(Modifier.width(8.dp))
+        Text("Converti in Entità Associativa")
     }
     if (relationship.attributes.isNotEmpty()) {
         Spacer(Modifier.height(8.dp))

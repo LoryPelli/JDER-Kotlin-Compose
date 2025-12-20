@@ -269,6 +269,16 @@ fun MainScreen(
                     modifier = Modifier.fillMaxSize()
                 )
                 if (showContextMenu) {
+                    val selectedRelationship = if (!contextMenuForEntity && state.selectedRelationshipId != null) {
+                        state.diagram.relationships.find { it.id == state.selectedRelationshipId }
+                    } else null
+                    val isNtoN = selectedRelationship?.let { relationship ->
+                        relationship.connections.size == 2 && relationship.connections.all { conn ->
+                            conn.cardinality == com.jder.domain.model.Cardinality.MANY ||
+                            conn.cardinality == com.jder.domain.model.Cardinality.ZERO_MANY ||
+                            conn.cardinality == com.jder.domain.model.Cardinality.ONE_MANY
+                        }
+                    } ?: false
                     ContextMenu(
                         position = contextMenuPosition,
                         isEntity = contextMenuForEntity,
@@ -300,7 +310,17 @@ fun MainScreen(
                                 showContextMenu = false
                                 showCreateConnectionDialog = true
                             }
-                        } else null
+                        } else null,
+                        onConvertToAssociativeEntity = if (!contextMenuForEntity) {
+                            {
+                                showContextMenu = false
+                                state.selectedRelationshipId?.let { relId ->
+                                    state.convertToAssociativeEntity(relId)
+                                    snackbarMessage = "Relazione convertita in entità associativa"
+                                }
+                            }
+                        } else null,
+                        isNtoNRelationship = isNtoN
                     )
                 }
             }
@@ -341,6 +361,12 @@ fun MainScreen(
                             state.selectedRelationshipId?.let { relId ->
                                 state.deleteConnection(relId, entityId)
                                 snackbarMessage = "Connessione eliminata"
+                            }
+                        },
+                        onConvertToAssociativeEntity = {
+                            state.selectedRelationshipId?.let { relId ->
+                                state.convertToAssociativeEntity(relId)
+                                snackbarMessage = "Relazione convertita in entità associativa"
                             }
                         },
                         onClose = {
