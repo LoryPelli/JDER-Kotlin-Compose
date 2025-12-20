@@ -23,6 +23,17 @@ dependencies {
 compose.desktop {
     application {
         mainClass = "com.jder.MainKt"
+        nativeDistributions {
+            macOS {
+                iconFile.set(project.file("src/main/resources/jder_icon.png"))
+            }
+            windows {
+                iconFile.set(project.file("src/main/resources/jder_icon.png"))
+            }
+            linux {
+                iconFile.set(project.file("src/main/resources/jder_icon.png"))
+            }
+        }
     }
 }
 java {

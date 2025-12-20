@@ -6,6 +6,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowPlacement
 import androidx.compose.ui.window.application
@@ -35,7 +36,8 @@ fun main() = application {
             }
         },
         title = "JDER - Java Diagrammi E/R",
-        state = windowState
+        state = windowState,
+        icon = painterResource("jder_icon.png")
     ) {
         window.minimumSize = Dimension(800, 600)
         JDERTheme(darkTheme = themeState.isDarkTheme) {
