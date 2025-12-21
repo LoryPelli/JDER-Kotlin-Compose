@@ -84,6 +84,12 @@ fun renderDiagramToBitmap(diagram: ERDiagram): ImageBitmap {
             }
         }
     }
+    diagram.notes.forEach { note ->
+        allXCoords.add(note.x)
+        allXCoords.add(note.x + note.width)
+        allYCoords.add(note.y)
+        allYCoords.add(note.y + note.height)
+    }
     val minX = (allXCoords.minOrNull() ?: 0f) - padding
     val minY = (allYCoords.minOrNull() ?: 0f) - padding
     val maxX = (allXCoords.maxOrNull() ?: 1000f) + padding
@@ -327,6 +333,56 @@ fun renderDiagramToBitmap(diagram: ERDiagram): ImageBitmap {
                     g2d.drawString(component.name, compX + compRadius + 8, compY + 4)
                 }
             }
+        }
+    }
+    diagram.notes.forEach { note ->
+        val x = (note.x + offsetX).toInt()
+        val y = (note.y + offsetY).toInt()
+        val w = note.width.toInt()
+        val h = note.height.toInt()
+        g2d.color = Color(255, 235, 59)
+        g2d.fillRect(x, y, w, h)
+        g2d.color = Color(251, 192, 45)
+        g2d.stroke = BasicStroke(1.5f)
+        g2d.drawRect(x, y, w, h)
+        val foldSize = 15
+        val xPoints = intArrayOf(x + w - foldSize, x + w, x + w - foldSize)
+        val yPoints = intArrayOf(y, y + foldSize, y + foldSize)
+        g2d.color = Color(249, 168, 37)
+        g2d.fillPolygon(xPoints, yPoints, 3)
+        g2d.color = Color(251, 192, 45)
+        g2d.drawPolygon(xPoints, yPoints, 3)
+        g2d.color = Color.BLACK
+        g2d.font = Font("Arial", Font.PLAIN, 12)
+        val fm = g2d.fontMetrics
+        val lineHeight = fm.height
+        val notePadding = 10
+        val availableWidth = w - (notePadding * 2)
+        val availableHeight = h - (notePadding * 2)
+        val wrappedLines = mutableListOf<String>()
+        var currentLine = ""
+        note.text.forEach { char ->
+            val testLine = currentLine + char
+            val testWidth = fm.stringWidth(testLine)
+            if (testWidth <= availableWidth) {
+                currentLine = testLine
+            } else {
+                if (currentLine.isNotEmpty()) {
+                    wrappedLines.add(currentLine)
+                    currentLine = char.toString()
+                } else {
+                    wrappedLines.add(char.toString())
+                    currentLine = ""
+                }
+            }
+        }
+        if (currentLine.isNotEmpty()) {
+            wrappedLines.add(currentLine)
+        }
+        val maxLines = availableHeight / lineHeight
+        val linesToDraw = wrappedLines.take(maxLines)
+        linesToDraw.forEachIndexed { index, line ->
+            g2d.drawString(line, x + notePadding, y + notePadding + fm.ascent + (index * lineHeight))
         }
     }
     g2d.dispose()

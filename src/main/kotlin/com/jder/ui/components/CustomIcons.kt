@@ -64,4 +64,40 @@ object CustomIcons {
                 }
             }.build()
         }
+    val StickyNote: ImageVector
+        get() {
+            return ImageVector.Builder(
+                name = "StickyNote",
+                defaultWidth = 24.dp,
+                defaultHeight = 24.dp,
+                viewportWidth = 24f,
+                viewportHeight = 24f
+            ).apply {
+                path(
+                    fill = null,
+                    fillAlpha = 1.0f,
+                    stroke = SolidColor(Color.Black),
+                    strokeAlpha = 1.0f,
+                    strokeLineWidth = 2f,
+                    strokeLineCap = StrokeCap.Round,
+                    strokeLineJoin = StrokeJoin.Round,
+                    strokeLineMiter = 1.0f,
+                    pathFillType = PathFillType.NonZero
+                ) {
+                    moveTo(4f, 4f)
+                    lineTo(16f, 4f)
+                    lineTo(16f, 16f)
+                    lineTo(10f, 16f)
+                    lineTo(4f, 10f)
+                    close()
+                    moveTo(10f, 16f)
+                    lineTo(10f, 10f)
+                    lineTo(16f, 10f)
+                    moveTo(7f, 7f)
+                    lineTo(13f, 7f)
+                    moveTo(7f, 10f)
+                    lineTo(10f, 10f)
+                }
+            }.build()
+        }
 }

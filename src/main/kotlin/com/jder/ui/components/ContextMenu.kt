@@ -28,14 +28,19 @@ import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+enum class ContextMenuType {
+    ENTITY,
+    RELATIONSHIP,
+    NOTE
+}
 @Composable
 fun ContextMenu(
     position: Offset,
-    isEntity: Boolean,
+    type: ContextMenuType,
     onDismiss: () -> Unit,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
-    onAddAttribute: () -> Unit,
+    onAddAttribute: (() -> Unit)? = null,
     onAddConnection: (() -> Unit)? = null,
     onConvertToAssociativeEntity: (() -> Unit)? = null,
     isNtoNRelationship: Boolean = false
@@ -58,7 +63,11 @@ fun ContextMenu(
                 modifier = Modifier.padding(vertical = 8.dp)
             ) {
                 Text(
-                    text = if (isEntity) "Azioni Entità" else "Azioni Relazione",
+                    text = when (type) {
+                        ContextMenuType.ENTITY -> "Azioni Entità"
+                        ContextMenuType.RELATIONSHIP -> "Azioni Relazione"
+                        ContextMenuType.NOTE -> "Azioni Nota"
+                    },
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
@@ -69,7 +78,13 @@ fun ContextMenu(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.Default.Edit, null, modifier = Modifier.size(20.dp))
                             Spacer(Modifier.width(12.dp))
-                            Text("Modifica Proprietà")
+                            Text(
+                                when (type) {
+                                    ContextMenuType.ENTITY -> "Modifica Proprietà"
+                                    ContextMenuType.RELATIONSHIP -> "Modifica Proprietà"
+                                    ContextMenuType.NOTE -> "Modifica Testo"
+                                }
+                            )
                         }
                     },
                     onClick = {
@@ -81,23 +96,25 @@ fun ContextMenu(
                     },
                     leadingIcon = null
                 )
-                DropdownMenuItem(
-                    text = {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.Add, null, modifier = Modifier.size(20.dp))
-                            Spacer(Modifier.width(12.dp))
-                            Text("Aggiungi Attributo")
-                        }
-                    },
-                    onClick = {
-                        coroutineScope.launch {
-                            delay(150)
-                            onDismiss()
-                            onAddAttribute()
-                        }
-                    },
-                    leadingIcon = null
-                )
+                if (onAddAttribute != null && type != ContextMenuType.NOTE) {
+                    DropdownMenuItem(
+                        text = {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.Add, null, modifier = Modifier.size(20.dp))
+                                Spacer(Modifier.width(12.dp))
+                                Text("Aggiungi Attributo")
+                            }
+                        },
+                        onClick = {
+                            coroutineScope.launch {
+                                delay(150)
+                                onDismiss()
+                                onAddAttribute()
+                            }
+                        },
+                        leadingIcon = null
+                    )
+                }
                 if (onAddConnection != null) {
                     DropdownMenuItem(
                         text = {

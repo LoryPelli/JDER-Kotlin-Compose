@@ -72,6 +72,8 @@ fun FileManagerDialog(
     var invalidPathError by remember { mutableStateOf("") }
     var refreshTrigger by remember { mutableStateOf(0) }
     var showOnlySupportedFiles by remember { mutableStateOf(false) }
+    var showOverwriteDialog by remember { mutableStateOf(false) }
+    var fileToOverwrite by remember { mutableStateOf<File?>(null) }
     var pathInput by remember {
         mutableStateOf(TextFieldValue(
             text = currentDirectory.absolutePath,
@@ -152,7 +154,6 @@ fun FileManagerDialog(
                                         else -> {
                                             currentDirectory = newPath
                                             selectedFile = null
-                                            fileName = ""
                                         }
                                     }
                                     true
@@ -255,7 +256,6 @@ fun FileManagerDialog(
                                             if (file.canRead()) {
                                                 currentDirectory = file
                                                 selectedFile = null
-                                                fileName = ""
                                             }
                                         } else {
                                             selectedFile = file
@@ -267,7 +267,6 @@ fun FileManagerDialog(
                                             if (file.canRead()) {
                                                 currentDirectory = file
                                                 selectedFile = null
-                                                fileName = ""
                                             }
                                         } else if (mode == FileManagerMode.OPEN && file.extension == fileExtension.removePrefix(".")) {
                                             onFileSelected(file)
@@ -326,7 +325,12 @@ fun FileManagerDialog(
                                         return@Button
                                     }
                                     val file = File(currentDirectory, "$fileName$fileExtension")
-                                    onFileSelected(file)
+                                    if (file.exists()) {
+                                        fileToOverwrite = file
+                                        showOverwriteDialog = true
+                                    } else {
+                                        onFileSelected(file)
+                                    }
                                 }
                                 FileManagerMode.OPEN -> {
                                     selectedFile?.let { file ->
@@ -389,6 +393,49 @@ fun FileManagerDialog(
                     }
                 ) {
                     Text("OK")
+                }
+            },
+            shape = RoundedCornerShape(28.dp)
+        )
+    }
+    if (showOverwriteDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                showOverwriteDialog = false
+                fileToOverwrite = null
+            },
+            title = {
+                Text(
+                    text = "Conferma sovrascrittura",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text(
+                    text = "Il file \"${fileToOverwrite?.name}\" esiste già. Vuoi sovrascriverlo?",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        fileToOverwrite?.let { onFileSelected(it) }
+                        showOverwriteDialog = false
+                        fileToOverwrite = null
+                    }
+                ) {
+                    Text("Sovrascrivi")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showOverwriteDialog = false
+                        fileToOverwrite = null
+                    }
+                ) {
+                    Text("Annulla")
                 }
             },
             shape = RoundedCornerShape(28.dp)

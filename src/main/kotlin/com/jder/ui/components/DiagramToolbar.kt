@@ -158,11 +158,15 @@ fun DiagramToolbar(
                                             state.deleteRelationship(state.selectedRelationshipId!!)
                                             onShowSnackbar("Relazione eliminata")
                                         }
+                                        state.selectedNoteId != null -> {
+                                            state.deleteNote(state.selectedNoteId!!)
+                                            onShowSnackbar("Nota eliminata")
+                                        }
                                     }
                                 }
                             },
                             leadingIcon = { Icon(Icons.Default.Delete, null) },
-                            enabled = state.selectedEntityId != null || state.selectedRelationshipId != null
+                            enabled = state.selectedEntityId != null || state.selectedRelationshipId != null || state.selectedNoteId != null
                         )
                     }
                 }
@@ -279,6 +283,12 @@ fun DiagramToolbar(
                 ) {
                     Icon(CustomIcons.Diamond, "Crea Relazione")
                 }
+                IconToggleButton(
+                    checked = state.toolMode == ToolMode.NOTE,
+                    onCheckedChange = { state.toolMode = ToolMode.NOTE }
+                ) {
+                    Icon(CustomIcons.StickyNote, "Crea Nota")
+                }
                 Divider(modifier = Modifier.width(1.dp).height(40.dp))
                 IconButton(
                     onClick = onSaveDiagram,
@@ -297,15 +307,19 @@ fun DiagramToolbar(
                                 state.deleteRelationship(state.selectedRelationshipId!!)
                                 onShowSnackbar("Relazione eliminata")
                             }
+                            state.selectedNoteId != null -> {
+                                state.deleteNote(state.selectedNoteId!!)
+                                onShowSnackbar("Nota eliminata")
+                            }
                         }
                     },
-                    enabled = state.selectedEntityId != null || state.selectedRelationshipId != null,
+                    enabled = state.selectedEntityId != null || state.selectedRelationshipId != null || state.selectedNoteId != null,
                     modifier = Modifier.padding(horizontal = 4.dp)
                 ) {
                     Icon(
                         Icons.Default.Delete,
                         "Elimina Elemento Selezionato",
-                        tint = if (state.selectedEntityId != null || state.selectedRelationshipId != null)
+                        tint = if (state.selectedEntityId != null || state.selectedRelationshipId != null || state.selectedNoteId != null)
                             MaterialTheme.colorScheme.error
                         else
                             MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)

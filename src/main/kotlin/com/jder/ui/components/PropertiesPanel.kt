@@ -35,15 +35,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.jder.domain.model.Attribute
+import com.jder.domain.model.Cardinality
 import com.jder.domain.model.Connection
 import com.jder.domain.model.DiagramState
 import com.jder.domain.model.Entity
+import com.jder.domain.model.Note
 import com.jder.domain.model.Relationship
 @Composable
 fun PropertiesPanel(
     state: DiagramState,
     onEditEntity: () -> Unit,
     onEditRelationship: () -> Unit,
+    onEditNote: () -> Unit,
     onAddAttribute: () -> Unit,
     onAddConnection: () -> Unit,
     onEditAttribute: (Attribute) -> Unit,
@@ -109,6 +112,15 @@ fun PropertiesPanel(
                         onEditConnection = onEditConnection,
                         onDeleteConnection = onDeleteConnection,
                         onConvertToAssociativeEntity = onConvertToAssociativeEntity
+                    )
+                }
+            }
+            state.selectedNoteId != null -> {
+                val note = state.diagram.notes.find { it.id == state.selectedNoteId }
+                note?.let {
+                    NotePropertiesContent(
+                        note = it,
+                        onEditNote = onEditNote
                     )
                 }
             }
@@ -193,9 +205,9 @@ private fun RelationshipPropertiesContent(
     onConvertToAssociativeEntity: () -> Unit
 ) {
     val isNtoN = relationship.connections.size == 2 && relationship.connections.all { conn ->
-        conn.cardinality == com.jder.domain.model.Cardinality.MANY ||
-        conn.cardinality == com.jder.domain.model.Cardinality.ZERO_MANY ||
-        conn.cardinality == com.jder.domain.model.Cardinality.ONE_MANY
+        conn.cardinality == Cardinality.MANY ||
+        conn.cardinality == Cardinality.ZERO_MANY ||
+        conn.cardinality == Cardinality.ONE_MANY
     }
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -395,5 +407,42 @@ private fun DocumentationCard(documentation: String) {
                 style = MaterialTheme.typography.bodySmall
             )
         }
+    }
+}
+@Composable
+private fun NotePropertiesContent(
+    note: Note,
+    onEditNote: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.secondaryContainer
+        )
+    ) {
+        Column(modifier = Modifier.padding(12.dp)) {
+            Text(
+                "Nota",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSecondaryContainer
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                note.text.take(50) + if (note.text.length > 50) "..." else "",
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
+    }
+    Spacer(Modifier.height(8.dp))
+    Button(
+        onClick = onEditNote,
+        modifier = Modifier.fillMaxWidth(),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = MaterialTheme.colorScheme.primary
+        )
+    ) {
+        Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(18.dp))
+        Spacer(Modifier.width(8.dp))
+        Text("Modifica Testo")
     }
 }

@@ -58,9 +58,19 @@ enum class AttributeType {
     COMPOSITE
 }
 @Serializable
+data class Note(
+    val id: String,
+    val text: String,
+    val x: Float,
+    val y: Float,
+    val width: Float = 200f,
+    val height: Float = 150f
+)
+@Serializable
 data class ERDiagram(
     val name: String,
     val entities: List<Entity> = emptyList(),
     val relationships: List<Relationship> = emptyList(),
+    val notes: List<Note> = emptyList(),
     val documentation: String = ""
 )

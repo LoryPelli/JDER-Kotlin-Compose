@@ -11,6 +11,8 @@ class DiagramState {
         private set
     var selectedRelationshipId by mutableStateOf<String?>(null)
         private set
+    var selectedNoteId by mutableStateOf<String?>(null)
+        private set
     var toolMode by mutableStateOf(ToolMode.SELECT)
     var isModified by mutableStateOf(false)
         private set
@@ -28,7 +30,8 @@ class DiagramState {
                     attributes = it.attributes.toList(),
                     connections = it.connections.toList()
                 )
-            }
+            },
+            notes = diagram.notes.toList()
         ))
         if (undoStack.size > maxUndoSize) {
             undoStack.removeAt(0)
@@ -44,7 +47,8 @@ class DiagramState {
                         attributes = it.attributes.toList(),
                         connections = it.connections.toList()
                     )
-                }
+                },
+                notes = diagram.notes.toList()
             ))
             diagram = undoStack.removeAt(undoStack.size - 1)
             isModified = true
@@ -53,6 +57,9 @@ class DiagramState {
             }
             if (selectedRelationshipId != null && diagram.relationships.none { it.id == selectedRelationshipId }) {
                 selectedRelationshipId = null
+            }
+            if (selectedNoteId != null && diagram.notes.none { it.id == selectedNoteId }) {
+                selectedNoteId = null
             }
         }
     }
@@ -65,7 +72,8 @@ class DiagramState {
                         attributes = it.attributes.toList(),
                         connections = it.connections.toList()
                     )
-                }
+                },
+                notes = diagram.notes.toList()
             ))
             diagram = redoStack.removeAt(redoStack.size - 1)
             isModified = true
@@ -74,6 +82,9 @@ class DiagramState {
             }
             if (selectedRelationshipId != null && diagram.relationships.none { it.id == selectedRelationshipId }) {
                 selectedRelationshipId = null
+            }
+            if (selectedNoteId != null && diagram.notes.none { it.id == selectedNoteId }) {
+                selectedNoteId = null
             }
         }
     }
@@ -99,6 +110,17 @@ class DiagramState {
             y = y
         )
         diagram = diagram.copy(relationships = diagram.relationships + newRelationship)
+        isModified = true
+    }
+    fun addNote(x: Float, y: Float, text: String) {
+        saveState()
+        val newNote = Note(
+            id = UUID.randomUUID().toString(),
+            text = text,
+            x = x,
+            y = y
+        )
+        diagram = diagram.copy(notes = diagram.notes + newNote)
         isModified = true
     }
     fun updateEntity(entityId: String, update: (Entity) -> Entity) {
@@ -135,6 +157,23 @@ class DiagramState {
         )
         isModified = true
     }
+    fun updateNote(noteId: String, update: (Note) -> Note) {
+        saveState()
+        diagram = diagram.copy(
+            notes = diagram.notes.map {
+                if (it.id == noteId) update(it) else it
+            }
+        )
+        isModified = true
+    }
+    fun updateNoteWithoutSave(noteId: String, update: (Note) -> Note) {
+        diagram = diagram.copy(
+            notes = diagram.notes.map {
+                if (it.id == noteId) update(it) else it
+            }
+        )
+        isModified = true
+    }
     fun saveDragStartState() {
         saveState()
     }
@@ -158,6 +197,16 @@ class DiagramState {
         )
         if (selectedRelationshipId == relationshipId) {
             selectedRelationshipId = null
+        }
+        isModified = true
+    }
+    fun deleteNote(noteId: String) {
+        saveState()
+        diagram = diagram.copy(
+            notes = diagram.notes.filter { it.id != noteId }
+        )
+        if (selectedNoteId == noteId) {
+            selectedNoteId = null
         }
         isModified = true
     }
@@ -234,14 +283,22 @@ class DiagramState {
     fun selectEntity(entityId: String?) {
         selectedEntityId = entityId
         selectedRelationshipId = null
+        selectedNoteId = null
     }
     fun selectRelationship(relationshipId: String?) {
         selectedRelationshipId = relationshipId
         selectedEntityId = null
+        selectedNoteId = null
+    }
+    fun selectNote(noteId: String?) {
+        selectedNoteId = noteId
+        selectedEntityId = null
+        selectedRelationshipId = null
     }
     fun clearSelection() {
         selectedEntityId = null
         selectedRelationshipId = null
+        selectedNoteId = null
     }
     fun loadDiagram(newDiagram: ERDiagram, filePath: String?) {
         diagram = newDiagram
@@ -331,5 +388,6 @@ class DiagramState {
 enum class ToolMode {
     SELECT,
     ENTITY,
-    RELATIONSHIP
+    RELATIONSHIP,
+    NOTE
 }

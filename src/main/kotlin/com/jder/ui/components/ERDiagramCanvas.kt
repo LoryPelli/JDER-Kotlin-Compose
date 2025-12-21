@@ -33,6 +33,7 @@ import com.jder.domain.model.Attribute
 import com.jder.domain.model.AttributeType
 import com.jder.domain.model.DiagramState
 import com.jder.domain.model.Entity
+import com.jder.domain.model.Note
 import com.jder.domain.model.Relationship
 import com.jder.domain.model.ToolMode
 import kotlin.math.abs
@@ -40,7 +41,7 @@ import kotlin.math.sqrt
 @Composable
 fun ERDiagramCanvas(
     state: DiagramState,
-    onContextMenuRequest: ((Offset, Boolean) -> Unit)? = null,
+    onContextMenuRequest: ((Offset, ContextMenuType) -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     val textMeasurer = rememberTextMeasurer()
@@ -94,14 +95,24 @@ fun ERDiagramCanvas(
                                 isPointInDiamond(adjustedOffset, rel)
                             }
                         } else null
+                        val clickedNote = if (clickedEntity == null && clickedRelationship == null) {
+                            state.diagram.notes.find { note ->
+                                adjustedOffset.x >= note.x && adjustedOffset.x <= note.x + note.width &&
+                                adjustedOffset.y >= note.y && adjustedOffset.y <= note.y + note.height
+                            }
+                        } else null
                         when {
                             clickedEntity != null -> {
                                 state.selectEntity(clickedEntity.id)
-                                onContextMenuRequest?.invoke(offset, true)
+                                onContextMenuRequest?.invoke(offset, ContextMenuType.ENTITY)
                             }
                             clickedRelationship != null -> {
                                 state.selectRelationship(clickedRelationship.id)
-                                onContextMenuRequest?.invoke(offset, false)
+                                onContextMenuRequest?.invoke(offset, ContextMenuType.RELATIONSHIP)
+                            }
+                            clickedNote != null -> {
+                                state.selectNote(clickedNote.id)
+                                onContextMenuRequest?.invoke(offset, ContextMenuType.NOTE)
                             }
                         }
                     }
@@ -129,14 +140,24 @@ fun ERDiagramCanvas(
                                     isPointInDiamond(adjustedOffset, rel)
                                 }
                             } else null
+                            val clickedNote = if (clickedEntity == null && clickedRelationship == null) {
+                                state.diagram.notes.find { note ->
+                                    adjustedOffset.x >= note.x && adjustedOffset.x <= note.x + note.width &&
+                                    adjustedOffset.y >= note.y && adjustedOffset.y <= note.y + note.height
+                                }
+                            } else null
                             when {
                                 clickedEntity != null -> {
                                     state.selectEntity(clickedEntity.id)
-                                    onContextMenuRequest?.invoke(position, true)
+                                    onContextMenuRequest?.invoke(position, ContextMenuType.ENTITY)
                                 }
                                 clickedRelationship != null -> {
                                     state.selectRelationship(clickedRelationship.id)
-                                    onContextMenuRequest?.invoke(position, false)
+                                    onContextMenuRequest?.invoke(position, ContextMenuType.RELATIONSHIP)
+                                }
+                                clickedNote != null -> {
+                                    state.selectNote(clickedNote.id)
+                                    onContextMenuRequest?.invoke(position, ContextMenuType.NOTE)
                                 }
                             }
                         }
@@ -226,6 +247,15 @@ fun ERDiagramCanvas(
                     compositeColor = compositeColor,
                     componentColor = componentColor,
                     textBackgroundColor = textBackgroundColor
+                )
+            }
+            state.diagram.notes.forEach { note ->
+                val isSelected = state.selectedNoteId == note.id
+                drawNote(
+                    note = note,
+                    isSelected = isSelected,
+                    textMeasurer = textMeasurer,
+                    selectedColor = selectedColor
                 )
             }
         }
@@ -429,6 +459,66 @@ private fun DrawScope.drawRelationship(
             )
         }
     }
+}
+private fun DrawScope.drawNote(
+    note: Note,
+    isSelected: Boolean,
+    textMeasurer: TextMeasurer,
+    selectedColor: Color
+) {
+    val noteColor = Color(0xFFFFEB3B)
+    val strokeColor = if (isSelected) selectedColor else Color(0xFFFBC02D)
+    val strokeWidth = if (isSelected) 3f else 1.5f
+    drawRect(
+        color = noteColor,
+        topLeft = Offset(note.x, note.y),
+        size = Size(note.width, note.height),
+        style = Fill
+    )
+    drawRect(
+        color = strokeColor,
+        topLeft = Offset(note.x, note.y),
+        size = Size(note.width, note.height),
+        style = Stroke(width = strokeWidth)
+    )
+    val foldSize = 15f
+    val foldPath = Path().apply {
+        moveTo(note.x + note.width - foldSize, note.y)
+        lineTo(note.x + note.width, note.y + foldSize)
+        lineTo(note.x + note.width - foldSize, note.y + foldSize)
+        close()
+    }
+    drawPath(
+        path = foldPath,
+        color = Color(0xFFF9A825),
+        style = Fill
+    )
+    drawPath(
+        path = foldPath,
+        color = strokeColor,
+        style = Stroke(width = 1f)
+    )
+    val padding = 10f
+    val availableWidth = note.width - (padding * 2)
+    val availableHeight = note.height - (padding * 2)
+    val textLayoutResult = textMeasurer.measure(
+        text = note.text,
+        style = TextStyle(
+            color = Color.Black,
+            fontSize = 12.sp
+        ),
+        constraints = androidx.compose.ui.unit.Constraints(
+            maxWidth = availableWidth.toInt(),
+            maxHeight = availableHeight.toInt()
+        )
+    )
+    drawText(
+        textLayoutResult = textLayoutResult,
+        topLeft = Offset(
+            note.x + padding,
+            note.y + padding
+        )
+    )
 }
 private fun DrawScope.drawAttribute(
     attribute: Attribute,
@@ -784,6 +874,14 @@ private fun handleCanvasTap(state: DiagramState, offset: Offset) {
             }
             if (clickedEntity != null) {
                 state.selectEntity(clickedEntity.id)
+                return
+            }
+            val clickedNote = state.diagram.notes.firstOrNull { note ->
+                offset.x >= note.x && offset.x <= note.x + note.width &&
+                offset.y >= note.y && offset.y <= note.y + note.height
+            }
+            if (clickedNote != null) {
+                state.selectNote(clickedNote.id)
             } else {
                 state.clearSelection()
             }
@@ -794,6 +892,10 @@ private fun handleCanvasTap(state: DiagramState, offset: Offset) {
         }
         ToolMode.RELATIONSHIP -> {
             state.addRelationship(offset.x - 60f, offset.y - 60f, "Nuova Relazione")
+            state.toolMode = ToolMode.SELECT
+        }
+        ToolMode.NOTE -> {
+            state.addNote(offset.x - 100f, offset.y - 75f, "Nuova Nota")
             state.toolMode = ToolMode.SELECT
         }
     }
@@ -859,6 +961,15 @@ private fun handleDragStart(state: DiagramState, offset: Offset): Triple<String?
     }
     if (relationship != null) {
         state.selectRelationship(relationship.id)
+        state.saveDragStartState()
+        return Triple(null, null, null)
+    }
+    val note = state.diagram.notes.find { note ->
+        adjustedOffset.x >= note.x && adjustedOffset.x <= note.x + note.width &&
+        adjustedOffset.y >= note.y && adjustedOffset.y <= note.y + note.height
+    }
+    if (note != null) {
+        state.selectNote(note.id)
         state.saveDragStartState()
         return Triple(null, null, null)
     }
@@ -970,6 +1081,14 @@ private fun handleDrag(
             rel.copy(
                 x = rel.x + dragAmount.x / state.zoom,
                 y = rel.y + dragAmount.y / state.zoom
+            )
+        }
+    }
+    state.selectedNoteId?.let { noteId ->
+        state.updateNoteWithoutSave(noteId) { note ->
+            note.copy(
+                x = note.x + dragAmount.x / state.zoom,
+                y = note.y + dragAmount.y / state.zoom
             )
         }
     }

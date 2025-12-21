@@ -32,10 +32,12 @@ import androidx.compose.ui.unit.dp
 import com.jder.data.DiagramRepository
 import com.jder.data.ImageExporter
 import com.jder.domain.model.Attribute
+import com.jder.domain.model.Cardinality
 import com.jder.domain.model.Connection
 import com.jder.domain.model.DiagramState
 import com.jder.domain.model.ToolMode
 import com.jder.ui.components.ContextMenu
+import com.jder.ui.components.ContextMenuType
 import com.jder.ui.components.DiagramToolbar
 import com.jder.ui.components.ERDiagramCanvas
 import com.jder.ui.components.FileManagerDialog
@@ -46,6 +48,7 @@ import com.jder.ui.dialogs.CreateConnectionDialog
 import com.jder.ui.dialogs.EditAttributeDialog
 import com.jder.ui.dialogs.EditConnectionDialog
 import com.jder.ui.dialogs.EntityPropertiesDialog
+import com.jder.ui.dialogs.NotePropertiesDialog
 import com.jder.ui.dialogs.RelationshipPropertiesDialog
 import com.jder.ui.utils.renderDiagramToBitmap
 import com.jder.ui.theme.ThemeState
@@ -58,6 +61,7 @@ fun MainScreen(
 ) {
     var showEntityDialog by remember { mutableStateOf(false) }
     var showRelationshipDialog by remember { mutableStateOf(false) }
+    var showNoteDialog by remember { mutableStateOf(false) }
     var showAddAttributeDialog by remember { mutableStateOf(false) }
     var showEditAttributeDialog by remember { mutableStateOf(false) }
     var attributeToEdit by remember { mutableStateOf<Attribute?>(null) }
@@ -68,7 +72,7 @@ fun MainScreen(
     var showOpenDiagramConfirmDialog by remember { mutableStateOf(false) }
     var showContextMenu by remember { mutableStateOf(false) }
     var contextMenuPosition by remember { mutableStateOf(Offset.Zero) }
-    var contextMenuForEntity by remember { mutableStateOf(false) }
+    var contextMenuType by remember { mutableStateOf(ContextMenuType.ENTITY) }
     var showOpenDialog by remember { mutableStateOf(false) }
     var showSaveAsDialog by remember { mutableStateOf(false) }
     var showExportDialog by remember { mutableStateOf(false) }
@@ -151,6 +155,10 @@ fun MainScreen(
                             state.selectedRelationshipId != null -> {
                                 state.deleteRelationship(state.selectedRelationshipId!!)
                                 snackbarMessage = "Relazione eliminata"
+                            }
+                            state.selectedNoteId != null -> {
+                                state.deleteNote(state.selectedNoteId!!)
+                                snackbarMessage = "Nota eliminata"
                             }
                         }
                         true
@@ -261,57 +269,72 @@ fun MainScreen(
             ) {
                 ERDiagramCanvas(
                     state = state,
-                    onContextMenuRequest = { position, isEntity ->
+                    onContextMenuRequest = { position, type ->
                         contextMenuPosition = position
-                        contextMenuForEntity = isEntity
+                        contextMenuType = type
                         showContextMenu = true
                     },
                     modifier = Modifier.fillMaxSize()
                 )
                 if (showContextMenu) {
-                    val selectedRelationship = if (!contextMenuForEntity && state.selectedRelationshipId != null) {
+                    val selectedRelationship = if (contextMenuType == ContextMenuType.RELATIONSHIP && state.selectedRelationshipId != null) {
                         state.diagram.relationships.find { it.id == state.selectedRelationshipId }
                     } else null
                     val isNtoN = selectedRelationship?.let { relationship ->
                         relationship.connections.size == 2 && relationship.connections.all { conn ->
-                            conn.cardinality == com.jder.domain.model.Cardinality.MANY ||
-                            conn.cardinality == com.jder.domain.model.Cardinality.ZERO_MANY ||
-                            conn.cardinality == com.jder.domain.model.Cardinality.ONE_MANY
+                            conn.cardinality == Cardinality.MANY ||
+                            conn.cardinality == Cardinality.ZERO_MANY ||
+                            conn.cardinality == Cardinality.ONE_MANY
                         }
                     } ?: false
                     ContextMenu(
                         position = contextMenuPosition,
-                        isEntity = contextMenuForEntity,
+                        type = contextMenuType,
                         onDismiss = { showContextMenu = false },
                         onEdit = {
                             showContextMenu = false
-                            if (contextMenuForEntity) {
-                                showEntityDialog = true
-                            } else {
-                                showRelationshipDialog = true
+                            when (contextMenuType) {
+                                ContextMenuType.ENTITY -> showEntityDialog = true
+                                ContextMenuType.RELATIONSHIP -> showRelationshipDialog = true
+                                ContextMenuType.NOTE -> showNoteDialog = true
                             }
                         },
                         onDelete = {
                             showContextMenu = false
-                            if (contextMenuForEntity && state.selectedEntityId != null) {
-                                state.deleteEntity(state.selectedEntityId!!)
-                                snackbarMessage = "Entità eliminata"
-                            } else if (!contextMenuForEntity && state.selectedRelationshipId != null) {
-                                state.deleteRelationship(state.selectedRelationshipId!!)
-                                snackbarMessage = "Relazione eliminata"
+                            when (contextMenuType) {
+                                ContextMenuType.ENTITY -> {
+                                    state.selectedEntityId?.let {
+                                        state.deleteEntity(it)
+                                        snackbarMessage = "Entità eliminata"
+                                    }
+                                }
+                                ContextMenuType.RELATIONSHIP -> {
+                                    state.selectedRelationshipId?.let {
+                                        state.deleteRelationship(it)
+                                        snackbarMessage = "Relazione eliminata"
+                                    }
+                                }
+                                ContextMenuType.NOTE -> {
+                                    state.selectedNoteId?.let {
+                                        state.deleteNote(it)
+                                        snackbarMessage = "Nota eliminata"
+                                    }
+                                }
                             }
                         },
-                        onAddAttribute = {
-                            showContextMenu = false
-                            showAddAttributeDialog = true
-                        },
-                        onAddConnection = if (!contextMenuForEntity) {
+                        onAddAttribute = if (contextMenuType != ContextMenuType.NOTE) {
+                            {
+                                showContextMenu = false
+                                showAddAttributeDialog = true
+                            }
+                        } else null,
+                        onAddConnection = if (contextMenuType == ContextMenuType.RELATIONSHIP) {
                             {
                                 showContextMenu = false
                                 showCreateConnectionDialog = true
                             }
                         } else null,
-                        onConvertToAssociativeEntity = if (!contextMenuForEntity) {
+                        onConvertToAssociativeEntity = if (contextMenuType == ContextMenuType.RELATIONSHIP) {
                             {
                                 showContextMenu = false
                                 state.selectedRelationshipId?.let { relId ->
@@ -324,7 +347,7 @@ fun MainScreen(
                     )
                 }
             }
-            if (state.selectedEntityId != null || state.selectedRelationshipId != null) {
+            if (state.selectedEntityId != null || state.selectedRelationshipId != null || state.selectedNoteId != null) {
                 Surface(
                     modifier = Modifier
                         .width(300.dp)
@@ -335,6 +358,7 @@ fun MainScreen(
                         state = state,
                         onEditEntity = { showEntityDialog = true },
                         onEditRelationship = { showRelationshipDialog = true },
+                        onEditNote = { showNoteDialog = true },
                         onAddAttribute = { showAddAttributeDialog = true },
                         onAddConnection = { showCreateConnectionDialog = true },
                         onEditAttribute = { attr ->
@@ -372,6 +396,7 @@ fun MainScreen(
                         onClose = {
                             state.selectEntity(null)
                             state.selectRelationship(null)
+                            state.selectNote(null)
                         }
                     )
                 }
@@ -400,6 +425,20 @@ fun MainScreen(
                 onSave = { updatedRelationship ->
                     state.updateRelationship(it.id) { updatedRelationship }
                     showRelationshipDialog = false
+                }
+            )
+        }
+    }
+    if (showNoteDialog && state.selectedNoteId != null) {
+        val note = state.diagram.notes.find { it.id == state.selectedNoteId }
+        note?.let {
+            NotePropertiesDialog(
+                noteText = it.text,
+                onDismiss = { showNoteDialog = false },
+                onConfirm = { newText ->
+                    state.updateNote(it.id) { note -> note.copy(text = newText) }
+                    showNoteDialog = false
+                    snackbarMessage = "Nota modificata"
                 }
             )
         }
