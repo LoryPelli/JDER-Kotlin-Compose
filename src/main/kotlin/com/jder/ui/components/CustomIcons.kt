@@ -84,19 +84,19 @@ object CustomIcons {
                     strokeLineMiter = 1.0f,
                     pathFillType = PathFillType.NonZero
                 ) {
-                    moveTo(4f, 4f)
-                    lineTo(16f, 4f)
-                    lineTo(16f, 16f)
-                    lineTo(10f, 16f)
-                    lineTo(4f, 10f)
+                    moveTo(5f, 5f)
+                    lineTo(17f, 5f)
+                    lineTo(17f, 17f)
+                    lineTo(11f, 17f)
+                    lineTo(5f, 11f)
                     close()
-                    moveTo(10f, 16f)
-                    lineTo(10f, 10f)
-                    lineTo(16f, 10f)
-                    moveTo(7f, 7f)
-                    lineTo(13f, 7f)
-                    moveTo(7f, 10f)
-                    lineTo(10f, 10f)
+                    moveTo(11f, 17f)
+                    lineTo(11f, 11f)
+                    lineTo(17f, 11f)
+                    moveTo(8f, 8f)
+                    lineTo(14f, 8f)
+                    moveTo(8f, 11f)
+                    lineTo(11f, 11f)
                 }
             }.build()
         }
