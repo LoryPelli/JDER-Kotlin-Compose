@@ -63,8 +63,8 @@ data class Note(
     val text: String,
     val x: Float,
     val y: Float,
-    val width: Float = 200f,
-    val height: Float = 150f
+    val width: Float = 210f,
+    val height: Float = 155f
 )
 @Serializable
 data class ERDiagram(

@@ -26,16 +26,16 @@ fun NotePropertiesDialog(
     onConfirm: (String) -> Unit
 ) {
     var text by remember { mutableStateOf(noteText) }
-    val noteWidth = 200f
-    val noteHeight = 150f
-    val padding = 10f
+    val noteWidth = 210f
+    val noteHeight = 155f
+    val padding = 15f
     val availableWidth = (noteWidth - padding * 2).toInt()
     val availableHeight = (noteHeight - padding * 2).toInt()
     val maxCharacters = remember {
-        val avgCharWidth = 7
-        val lineHeight = 16
-        val maxCharsPerLine = availableWidth / avgCharWidth
-        val maxLines = availableHeight / lineHeight
+        val avgCharWidth = 4.45f
+        val lineHeight = 12.5f
+        val maxCharsPerLine = (availableWidth / avgCharWidth).toInt()
+        val maxLines = (availableHeight / lineHeight).toInt()
         (maxCharsPerLine * maxLines).coerceAtLeast(50)
     }
     val remainingChars = maxCharacters - text.length

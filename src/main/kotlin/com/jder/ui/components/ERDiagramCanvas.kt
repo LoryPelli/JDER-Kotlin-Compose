@@ -895,7 +895,7 @@ private fun handleCanvasTap(state: DiagramState, offset: Offset) {
             state.toolMode = ToolMode.SELECT
         }
         ToolMode.NOTE -> {
-            state.addNote(offset.x - 100f, offset.y - 75f, "Nuova Nota")
+            state.addNote(offset.x - 105f, offset.y - 77.5f, "Nuova Nota")
             state.toolMode = ToolMode.SELECT
         }
     }
