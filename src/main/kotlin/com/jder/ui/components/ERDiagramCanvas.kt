@@ -1,5 +1,6 @@
 package com.jder.ui.components
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.fillMaxSize
@@ -9,6 +10,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -22,6 +24,7 @@ import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.isSecondaryPressed
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.PointerButton
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
@@ -38,6 +41,7 @@ import com.jder.domain.model.Relationship
 import com.jder.domain.model.ToolMode
 import kotlin.math.abs
 import kotlin.math.sqrt
+@OptIn(ExperimentalFoundationApi::class, ExperimentalComposeUiApi::class)
 @Composable
 fun ERDiagramCanvas(
     state: DiagramState,
@@ -63,9 +67,55 @@ fun ERDiagramCanvas(
     var isDragging by remember { mutableStateOf(false) }
     var draggedAttributeInfo by remember { mutableStateOf<Triple<String?, String?, String?>>(Triple(null, null, null)) }
     var totalDragDistance by remember { mutableStateOf(0f) }
+    var isMiddleMouseDragging by remember { mutableStateOf(false) }
     Canvas(
         modifier = modifier
             .fillMaxSize()
+            .pointerInput(Unit) {
+                awaitPointerEventScope {
+                    while (true) {
+                        val event = awaitPointerEvent()
+                        when (event.type) {
+                            PointerEventType.Scroll -> {
+                                val change = event.changes.first()
+                                val scrollDelta = change.scrollDelta
+                                val zoomFactor = if (scrollDelta.y < 0) 1.1f else 0.9f
+                                val newZoom = (state.zoom * zoomFactor).coerceIn(0.25f, 3f)
+                                val mousePos = change.position
+                                val oldMouseWorld = Offset(
+                                    (mousePos.x - state.panOffset.x) / state.zoom,
+                                    (mousePos.y - state.panOffset.y) / state.zoom
+                                )
+                                state.zoom = newZoom
+                                state.panOffset = Offset(
+                                    mousePos.x - oldMouseWorld.x * newZoom,
+                                    mousePos.y - oldMouseWorld.y * newZoom
+                                )
+                            }
+                            PointerEventType.Press -> {
+                                if (event.button == PointerButton.Tertiary) {
+                                    isMiddleMouseDragging = true
+                                }
+                            }
+                            PointerEventType.Move -> {
+                                if (isMiddleMouseDragging) {
+                                    val change = event.changes.first()
+                                    val dragAmount = change.position - change.previousPosition
+                                    state.panOffset = Offset(
+                                        state.panOffset.x + dragAmount.x,
+                                        state.panOffset.y + dragAmount.y
+                                    )
+                                }
+                            }
+                            PointerEventType.Release -> {
+                                if (event.button == PointerButton.Tertiary) {
+                                    isMiddleMouseDragging = false
+                                }
+                            }
+                        }
+                    }
+                }
+            }
             .pointerInput(state.diagram.entities.size, state.diagram.relationships.size) {
                 detectTapGestures(
                     onTap = { offset ->
