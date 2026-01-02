@@ -9,8 +9,7 @@ import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 object CustomIcons {
     val Rectangle: ImageVector
-        get() {
-            return ImageVector.Builder(
+        get() = ImageVector.Builder(
                 name = "Rectangle",
                 defaultWidth = 24.dp,
                 defaultHeight = 24.dp,
@@ -35,10 +34,8 @@ object CustomIcons {
                     close()
                 }
             }.build()
-        }
     val Diamond: ImageVector
-        get() {
-            return ImageVector.Builder(
+        get() = ImageVector.Builder(
                 name = "Diamond",
                 defaultWidth = 24.dp,
                 defaultHeight = 24.dp,
@@ -63,10 +60,8 @@ object CustomIcons {
                     close()
                 }
             }.build()
-        }
     val StickyNote: ImageVector
-        get() {
-            return ImageVector.Builder(
+        get() = ImageVector.Builder(
                 name = "StickyNote",
                 defaultWidth = 24.dp,
                 defaultHeight = 24.dp,
@@ -99,5 +94,4 @@ object CustomIcons {
                     lineTo(11f, 11f)
                 }
             }.build()
-        }
 }
